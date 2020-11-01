@@ -119,10 +119,10 @@ var userType = new GraphQLObjectType({
                 type: new GraphQLList(genrePreferencesType)
             },
             sentMashmateRequests: {
-
+                type: new GraphQLList(mashmateType)
             },
             receivedMashmateRequests: {
-
+                type: new GraphQLList(mashmateType)
             },
             active: {
                 type: GraphQLBoolean
