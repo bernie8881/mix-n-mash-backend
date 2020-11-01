@@ -1,19 +1,13 @@
-var GraphQLSchema = require('graphql').GraphQLSchema;
-var GraphQLObjectType = require('graphql').GraphQLObjectType;
-var GraphQLList = require('graphql').GraphQLList;
-var GraphQLObjectType = require('graphql').GraphQLObjectType;
-var GraphQLNonNull = require('graphql').GraphQLNonNull;
-var GraphQLID = require('graphql').GraphQLID;
-var GraphQLString = require('graphql').GraphQLString;
-var GraphQLInt = require('graphql').GraphQLInt;
-var GraphQLDate = require('graphql-date');
-var MixtapeModel = require('../models/Mixtape');
-var CollaboratorModel = require('../models/Collaborator');
-var CommentsModel = require('../models/Comments');
-var ReplyModel = require('../models/Reply');
-const { GraphQLBoolean } = require('graphql');
+const GraphQLSchema = require('graphql').GraphQLSchema;
+const GraphQLObjectType = require('graphql').GraphQLObjectType;
+const GraphQLList = require('graphql').GraphQLList;
+const GraphQLNonNull = require('graphql').GraphQLNonNull;
+const GraphQLString = require('graphql').GraphQLString;
+const GraphQLInt = require('graphql').GraphQLInt;
+const MixtapeModel = require('../models/Mixtape');
+const { GraphQLBoolean, GraphQLInputObjectType } = require('graphql');
 
-var songsType = new GraphQLObjectType({
+const songsType = new GraphQLObjectType({
     name: 'song',
     fields: function(){
         return {
@@ -27,7 +21,21 @@ var songsType = new GraphQLObjectType({
     }
 });
 
-var collaboratorsType = new GraphQLObjectType({
+const songsInputType = new GraphQLInputObjectType({
+    name: 'songInput',
+    fields: function(){
+        return {
+            name: {
+                type: GraphQLString
+            },
+            youtubeId: {
+                type: GraphQLString
+            }
+        }
+    }
+});
+
+const collaboratorsType = new GraphQLObjectType({
     name: 'collaborator',
     fields: function(){
         return {
@@ -44,7 +52,24 @@ var collaboratorsType = new GraphQLObjectType({
     }
 });
 
-var mixtapeType = new GraphQLObjectType({
+const collaboratorsInputType = new GraphQLInputObjectType({
+    name: 'collaboratorInput',
+    fields: function(){
+        return {
+            userId: {
+                type: GraphQLString
+            },
+            username: {
+                type: GraphQLString
+            },
+            privilegeLevel: {
+                type: GraphQLString
+            }
+        }
+    }
+});
+
+const mixtapeType = new GraphQLObjectType({
     name: 'mixtape',
     fields: function () {
         return {
@@ -67,7 +92,7 @@ var mixtapeType = new GraphQLObjectType({
                 type: new GraphQLList(songsType)
             },
             ownerId: {
-                type: GraphQLInt
+                type: GraphQLString
             },
             likes: {
                 type: GraphQLInt
@@ -138,9 +163,6 @@ var mutation = new GraphQLObjectType({
             addMixtape: {
                 type: mixtapeType,
                 args: {
-                    _id: {
-                        type: new GraphQLNonNull(GraphQLString)
-                    },
                     title: {
                         type: new GraphQLNonNull(GraphQLString)
                     },
@@ -154,10 +176,10 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull( new GraphQLList(GraphQLString))
                     },
                     songs: {
-                        type: new GraphQLNonNull( new GraphQLList(songsType))
+                        type: new GraphQLNonNull( new GraphQLList(songsInputType))
                     },
                     ownerId: {
-                        type: new GraphQLNonNull(GraphQLInt)
+                        type: new GraphQLNonNull(GraphQLString)
                     },
                     likes: {
                         type: new GraphQLNonNull(GraphQLInt)
@@ -172,10 +194,10 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
                     collaborator: {
-                        type: new GraphQLNonNull(new GraphQLList(collaboratorsType))
+                        type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
                     },
                     timeCreated: {
-                        type: new GraphQLNonNull(new GraphQLNonNull(GraphQLInt))
+                        type: new GraphQLNonNull(GraphQLInt)
                     },
                     likesPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))
@@ -185,7 +207,7 @@ var mutation = new GraphQLObjectType({
                     }
                 },
                 resolve: function (root, params) {
-                    const mixtapeModel = new mixtapeModel(params);
+                    const mixtapeModel = new MixtapeModel(params);
                     const newMixtape = mixtapeModel.save();
                     if (!newMixtape) {
                         throw new Error('Error');
@@ -213,10 +235,10 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull( new GraphQLList(GraphQLString))
                     },
                     songs: {
-                        type: new GraphQLNonNull( new GraphQLList(songsType))
+                        type: new GraphQLNonNull( new GraphQLList(songsInputType))
                     },
                     ownerId: {
-                        type: new GraphQLNonNull(GraphQLInt)
+                        type: new GraphQLNonNull(GraphQLString)
                     },
                     likes: {
                         type: new GraphQLNonNull(GraphQLInt)
@@ -231,10 +253,10 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
                     collaborator: {
-                        type: new GraphQLNonNull(new GraphQLList(collaboratorsType))
+                        type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
                     },
                     timeCreated: {
-                        type: new GraphQLNonNull(new GraphQLNonNull(GraphQLInt))
+                        type: new GraphQLNonNull(GraphQLInt)
                     },
                     likesPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))

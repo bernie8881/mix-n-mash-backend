@@ -1,11 +1,7 @@
-var CommentsModel = require('./Comments');
-var ReplyModel = require('./Reply');
-var CollaboratorModel = require('./Collaborator');
+const mongoose = require('mongoose');
 
-var mongoose = require('mongoose');
-
-var MixtapeSchema = new mongoose.Schema({
-  _id: String,
+const MixtapeSchema = new mongoose.Schema({
+  id: String,
   title: String,
   description: String,
   genres: [String],
@@ -29,4 +25,4 @@ var MixtapeSchema = new mongoose.Schema({
   listensPerDay: [Number],
 });
 
-module.exports = mongoose.model('Mixtape', LogoSchema);
+module.exports = mongoose.model('Mixtape', MixtapeSchema);

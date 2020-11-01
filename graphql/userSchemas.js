@@ -1,14 +1,13 @@
-var GraphQLSchema = require('graphql').GraphQLSchema;
-var GraphQLObjectType = require('graphql').GraphQLObjectType;
-var GraphQLList = require('graphql').GraphQLList;
-var GraphQLObjectType = require('graphql').GraphQLObjectType;
-var GraphQLNonNull = require('graphql').GraphQLNonNull;
-var GraphQLID = require('graphql').GraphQLID;
-var GraphQLString = require('graphql').GraphQLString;
-var GraphQLInt = require('graphql').GraphQLInt;
+const GraphQLSchema = require('graphql').GraphQLSchema;
+const GraphQLObjectType = require('graphql').GraphQLObjectType;
+const GraphQLList = require('graphql').GraphQLList;
+const GraphQLNonNull = require('graphql').GraphQLNonNull;
+const GraphQLID = require('graphql').GraphQLID;
+const GraphQLString = require('graphql').GraphQLString;
+const GraphQLInt = require('graphql').GraphQLInt;
 const { isTypeSystemExtensionNode, GraphQLBoolean, GraphQLScalarType, GraphQLInputObjectType } = require('graphql');
-var GraphQLDate = require('graphql-date');
-var UserModel = require('../models/User');
+const GraphQLDate = require('graphql-date');
+const UserModel = require('../models/User');
 
 var genrePreferencesType = new GraphQLObjectType({
     name: 'genrePreferences',
@@ -203,7 +202,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
                     },
                     receivedMashmateRequests: {
-                        type: new GraohQLNonNull(new GraphQLList(mashmateInputType))
+                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
                     },
                     active: {
                         type: new GraphQLNonNull(GraphQLBoolean)
