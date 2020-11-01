@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var graphqlHTTP = require('express-graphql');
 var schema = require('./graphql/logoSchemas');
 const testSchema = require("./graphql/testSchemas");
+const userSchema = require("./graphql/userSchemas");
 var cors = require("cors");
 
 mongoose.connect('mongodb://localhost/node-graphql', { promiseLibrary: require('bluebird'), useNewUrlParser: true })
@@ -29,7 +30,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('*', cors());
 app.use('/graphql', cors(), graphqlHTTP({
   schema: schema,
@@ -38,6 +38,11 @@ app.use('/graphql', cors(), graphqlHTTP({
 }));
 app.use('/test', cors(), graphqlHTTP({
   schema: testSchema,
+  rootValue: global,
+  graphiql: true,
+}));
+app.use('/users', cors(), graphqlHTTP({
+  schema: userSchema,
   rootValue: global,
   graphiql: true,
 }));
