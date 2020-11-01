@@ -6,9 +6,83 @@ var GraphQLNonNull = require('graphql').GraphQLNonNull;
 var GraphQLID = require('graphql').GraphQLID;
 var GraphQLString = require('graphql').GraphQLString;
 var GraphQLInt = require('graphql').GraphQLInt;
-const { isTypeSystemExtensionNode, GraphQLBoolean, GraphQLScalarType } = require('graphql');
+const { isTypeSystemExtensionNode, GraphQLBoolean, GraphQLScalarType, GraphQLInputObjectType } = require('graphql');
 var GraphQLDate = require('graphql-date');
 var UserModel = require('../models/User');
+
+var genrePreferencesType = new GraphQLObjectType({
+    name: 'genrePreferences',
+    fields: function(){
+        return{
+            genre: {
+                type: GraphQLString
+            },
+            genreIncVal: {
+                type: GraphQLInt
+            }
+        }
+    }
+});
+
+var genrePreferencesInputType = new GraphQLInputObjectType({
+    name: 'genrePreferencesInput',
+    fields: function(){
+        return{
+            genre: {
+                type: GraphQLString
+            },
+            genreIncVal: {
+                type: GraphQLInt
+            }
+        }
+    }
+});
+
+var mashmateType = new GraphQLObjectType({
+    name: 'mashmate',
+    fields: function(){
+        return{
+            senderId: {
+                type: GraphQLString
+            },
+            recipientId: {
+                type: GraphQLString
+            },
+            username: {
+                type: GraphQLString
+            },
+            timeSent: {
+                type: GraphQLInt
+            },
+            seen: {
+                type: GraphQLBoolean
+            }
+        }
+    }
+});
+
+var mashmateInputType = new GraphQLInputObjectType({
+    name: 'mashmateInput',
+    fields: function(){
+        return{
+            senderId: {
+                type: GraphQLString
+            },
+            recipientId: {
+                type: GraphQLString
+            },
+            username: {
+                type: GraphQLString
+            },
+            timeSent: {
+                type: GraphQLInt
+            },
+            seen: {
+                type: GraphQLBoolean
+            }
+        }
+    }
+});
 
 var userType = new GraphQLObjectType({
     name: 'user',
@@ -31,6 +105,24 @@ var userType = new GraphQLObjectType({
             },
             numFollowers: {
                 type: GraphQLInt
+            },
+            following: {
+                type: new GraphQLList(GraphQLString)
+            },
+            mashmates: {
+                type: new GraphQLList(GraphQLString)
+            },
+            mixtapes: {
+                type: new GraphQLList(GraphQLString)
+            },
+            genrePreferences: {
+                type: new GraphQLList(genrePreferencesType)
+            },
+            sentMashmateRequests: {
+
+            },
+            receivedMashmateRequests: {
+
             },
             active: {
                 type: GraphQLBoolean
