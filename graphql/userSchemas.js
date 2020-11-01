@@ -187,6 +187,24 @@ var mutation = new GraphQLObjectType({
                     numFollowers: {
                         type: new GraphQLNonNull(GraphQLInt)
                     },
+                    following: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    mashmates: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    mixtapes: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    genrePreferences: {
+                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
+                    },
+                    sentMashmateRequests: {
+                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
+                    },
+                    receivedMashmateRequests: {
+                        type: new GraohQLNonNull(new GraphQLList(mashmateInputType))
+                    },
                     active: {
                         type: new GraphQLNonNull(GraphQLBoolean)
                     }
