@@ -94,6 +94,12 @@ const mixtapeType = new GraphQLObjectType({
             ownerId: {
                 type: GraphQLString
             },
+            ownerName: {
+                type: GraphQLString
+            },
+            listens: {
+                type: GraphQLInt
+            },
             likes: {
                 type: GraphQLInt
             },
@@ -152,6 +158,16 @@ var queryType = new GraphQLObjectType({
                     return mixtapeDetails
                 }
             },
+            hottestMixtapes: {
+                type: new GraphQLList(mixtapeType),
+                resolve: function () {
+                    const mixtapes = MixtapeModel.find().exec()
+                    if (!mixtapes) {
+                        throw new Error('Error')
+                    }
+                    return mixtapes
+                }
+            },
         }
     }
 });
@@ -180,6 +196,12 @@ var mutation = new GraphQLObjectType({
                     },
                     ownerId: {
                         type: new GraphQLNonNull(GraphQLString)
+                    },
+                    ownerName: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    listens:{
+                        type: new GraphQLNonNull(GraphQLInt)
                     },
                     likes: {
                         type: new GraphQLNonNull(GraphQLInt)
@@ -240,6 +262,12 @@ var mutation = new GraphQLObjectType({
                     ownerId: {
                         type: new GraphQLNonNull(GraphQLString)
                     },
+                    ownerName: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    listens:{
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
                     likes: {
                         type: new GraphQLNonNull(GraphQLInt)
                     },
@@ -273,6 +301,8 @@ var mutation = new GraphQLObjectType({
                             image: params.image,
                             songs: params.songs,
                             ownerId: params.ownerId,
+                            ownerName: params.ownerName,
+                            listens: params.listens,
                             likes: params.likes,
                             dislikes: params.dislikes,
                             // comments: [CommentsModel],
