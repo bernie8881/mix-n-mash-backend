@@ -228,6 +228,28 @@ var mutation = new GraphQLObjectType({
                     }
                     return newUser
                 }
+            },
+            addMixtape: {
+                type: userType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: GraphQLString
+                    },
+                    mixtapeId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function (root, params) {
+                    console.log(params)
+                    let temp = UserModel.findByIdAndUpdate(params.id,
+                    {
+                        $push: {
+                            mixtapes: params.mixtapeId
+                        }
+                    }).exec();
+                    return temp;
+                }
             }
         }
     }

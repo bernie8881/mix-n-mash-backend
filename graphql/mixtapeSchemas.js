@@ -36,7 +36,7 @@ const songsInputType = new GraphQLInputObjectType({
 });
 
 const collaboratorsType = new GraphQLObjectType({
-    name: 'collaborator',
+    name: 'collaborators',
     fields: function(){
         return {
             userId: {
@@ -53,7 +53,7 @@ const collaboratorsType = new GraphQLObjectType({
 });
 
 const collaboratorsInputType = new GraphQLInputObjectType({
-    name: 'collaboratorInput',
+    name: 'collaboratorsInput',
     fields: function(){
         return {
             userId: {
@@ -112,7 +112,7 @@ const mixtapeType = new GraphQLObjectType({
             private: {
                 type: GraphQLBoolean
             },
-            collaborator: {
+            collaborators: {
                 type: new GraphQLList(collaboratorsType)
             },
             timeCreated: {
@@ -168,6 +168,25 @@ var queryType = new GraphQLObjectType({
                     return mixtapes
                 }
             },
+            getUserMixtapes: {
+                type: new GraphQLList(mixtapeType),
+                args: {
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    const mixtapes = MixtapeModel.find(
+                        {
+                            $or:[
+                                {ownerId: params.userId},
+                                {"collaborators.userId": params.userId}
+                            ]
+                        }
+                    ).exec();
+                    return mixtapes
+                }
+            }
         }
     }
 });
@@ -215,7 +234,7 @@ var mutation = new GraphQLObjectType({
                     private: {
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
-                    collaborator: {
+                    collaborators: {
                         type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
                     },
                     timeCreated: {
@@ -280,7 +299,7 @@ var mutation = new GraphQLObjectType({
                     private: {
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
-                    collaborator: {
+                    collaborators: {
                         type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
                     },
                     timeCreated: {
