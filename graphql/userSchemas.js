@@ -159,6 +159,18 @@ var queryType = new GraphQLObjectType({
                     }
                     return userDetails
                 }
+            },
+            getUserByUsernameOrEmail: {
+                type: userType,
+                args: {
+                    usernameOrEmail: {
+                        type: GraphQLString
+                    }
+                },
+                resolve: function (root, params) {
+                    const userDetails = UserModel.findOne({ $or : [{email: params.usernameOrEmail}, {username: params.usernameOrEmail}] }).exec();
+                    return userDetails;
+                }
             }
         }
     }
