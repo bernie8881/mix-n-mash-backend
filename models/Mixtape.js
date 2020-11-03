@@ -11,6 +11,8 @@ const MixtapeSchema = new mongoose.Schema({
     youtubeId: String,
   }],
   ownerId: String,
+  ownerName: String,
+  listens: Number,
   likes: Number,
   dislikes: Number,
   // comments: [CommentsModel],
