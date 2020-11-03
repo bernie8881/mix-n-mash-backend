@@ -186,6 +186,17 @@ var queryType = new GraphQLObjectType({
                     ).exec();
                     return mixtapes
                 }
+            },
+            queryMixtapes: {
+                type: new GraphQLList(mixtapeType),
+                args: {
+                    searchTerm: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    return MixtapeModel.find({title: {$regex: params.searchTerm, $options: "i"}}).exec();
+                }
             }
         }
     }

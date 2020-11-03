@@ -171,6 +171,17 @@ var queryType = new GraphQLObjectType({
                     const userDetails = UserModel.findOne({ $or : [{email: params.usernameOrEmail}, {username: params.usernameOrEmail}] }).exec();
                     return userDetails;
                 }
+            },
+            queryUsers: {
+                type: new GraphQLList(userType),
+                args: {
+                    searchTerm: {
+                        type: GraphQLString
+                    }
+                },
+                resolve: function (root, params) {
+                    return UserModel.find({username: {$regex: params.searchTerm, $options: 'i'}}).exec();
+                }
             }
         }
     }
