@@ -37,8 +37,8 @@ var genrePreferencesInputType = new GraphQLInputObjectType({
     }
 });
 
-var mashmateType = new GraphQLObjectType({
-    name: 'mashmate',
+var mashmateRequestType = new GraphQLObjectType({
+    name: 'mashmateRequest',
     fields: function(){
         return{
             senderId: {
@@ -60,8 +60,8 @@ var mashmateType = new GraphQLObjectType({
     }
 });
 
-var mashmateInputType = new GraphQLInputObjectType({
-    name: 'mashmateInput',
+var mashmateRequestInputType = new GraphQLInputObjectType({
+    name: 'mashmateRequestInput',
     fields: function(){
         return{
             senderId: {
@@ -79,6 +79,34 @@ var mashmateInputType = new GraphQLInputObjectType({
             seen: {
                 type: GraphQLBoolean
             }
+        }
+    }
+});
+
+var mashmateType = new GraphQLObjectType({
+    name: 'mashmate',
+    fields: function(){
+        return{
+            id: {
+                type: GraphQLString
+            },
+            username: {
+                type: GraphQLString
+            },
+        }
+    }
+});
+
+var mashmateInputType = new GraphQLInputObjectType({
+    name: 'mashmateInput',
+    fields: function(){
+        return{
+            id: {
+                type: GraphQLString
+            },
+            username: {
+                type: GraphQLString
+            },
         }
     }
 });
@@ -109,7 +137,7 @@ var userType = new GraphQLObjectType({
                 type: new GraphQLList(GraphQLString)
             },
             mashmates: {
-                type: new GraphQLList(GraphQLString)
+                type: new GraphQLList(mashmateType)
             },
             mixtapes: {
                 type: new GraphQLList(GraphQLString)
@@ -118,10 +146,10 @@ var userType = new GraphQLObjectType({
                 type: new GraphQLList(genrePreferencesType)
             },
             sentMashmateRequests: {
-                type: new GraphQLList(mashmateType)
+                type: new GraphQLList(mashmateRequestType)
             },
             receivedMashmateRequests: {
-                type: new GraphQLList(mashmateType)
+                type: new GraphQLList(mashmateRequestType)
             },
             active: {
                 type: GraphQLBoolean
@@ -213,7 +241,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(new GraphQLList(GraphQLString))
                     },
                     mashmates: {
-                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
                     },
                     mixtapes: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLString))
@@ -222,10 +250,10 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
                     },
                     sentMashmateRequests: {
-                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
+                        type: new GraphQLNonNull(new GraphQLList(mashmateRequestInputType))
                     },
                     receivedMashmateRequests: {
-                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
+                        type: new GraphQLNonNull(new GraphQLList(mashmateRequestInputType))
                     },
                     active: {
                         type: new GraphQLNonNull(GraphQLBoolean)
@@ -260,6 +288,13 @@ var mutation = new GraphQLObjectType({
                         }
                     }).exec();
                     return temp;
+                }
+            },
+            removeUsers: {
+                type: GraphQLBoolean,
+                resolve: function () {
+                    UserModel.deleteMany({}).exec();
+                    return true;
                 }
             }
         }

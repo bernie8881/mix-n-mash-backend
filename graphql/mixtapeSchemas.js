@@ -361,6 +361,13 @@ var mutation = new GraphQLObjectType({
                     }
                     return remMixtape;
                 }
+            },
+            removeMixtapes: {
+                type: GraphQLBoolean,
+                resolve: function () {
+                    MixtapeModel.deleteMany({}).exec();
+                    return true;
+                }
             }
         }
     }

@@ -8,7 +8,9 @@ const UserSchema = new mongoose.Schema({
     bio: String,
     numFollowers: Number,
     following: [String],
-    mashmates: [String],
+    mashmates: [
+        {id: String, username: String}
+    ],
     mixtapes: [String],
     genrePreferences: [
         {genre: String, genreIncVal: Number}
