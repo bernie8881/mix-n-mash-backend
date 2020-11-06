@@ -6,6 +6,7 @@ const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
 const MixtapeModel = require('../models/Mixtape');
 const { GraphQLBoolean, GraphQLInputObjectType } = require('graphql');
+const { update } = require('../models/Mixtape');
 
 const songsType = new GraphQLObjectType({
     name: 'song',
@@ -145,13 +146,13 @@ var queryType = new GraphQLObjectType({
             mixtape: {
                 type: mixtapeType,
                 args: {
-                    _id: {
+                    id: {
                         name: '_id',
                         type: GraphQLString
                     },
                 },
                 resolve: function (root, params) {
-                    const mixtapeDetails = MixtapeModel.findById(params._id).exec()
+                    const mixtapeDetails = MixtapeModel.findById(params.id).exec()
                     if (!mixtapeDetails) {
                         throw new Error('Error')
                     }
@@ -360,6 +361,36 @@ var mutation = new GraphQLObjectType({
                         throw new Error('Error')
                     }
                     return remMixtape;
+                }
+            },
+            addSongs: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songsInputType))
+                    }
+                },
+                resolve: function (root, params) {
+                   return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {songs: {$each: params.songs}}}, {new: true}).exec();
+                }
+            },
+            editSongs: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songsInputType))
+                    }
+                },
+                resolve: function (root, params) {
+                    return MixtapeModel.findOneAndUpdate({_id: params.id}, {$set: {songs: params.songs}}, {new: true}).exec();
                 }
             },
             removeMixtapes: {

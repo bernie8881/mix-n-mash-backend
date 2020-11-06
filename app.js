@@ -15,7 +15,7 @@ mongoose.connect('mongodb://localhost/node-graphql', { promiseLibrary: require('
   .catch((err) => console.error(err));
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
+const youtubeRouter = require("./routes/youtube");
 
 const app = express();
 
@@ -30,22 +30,31 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+
 app.use('*', cors());
+
 app.use('/test', cors(), graphqlHTTP({
   schema: testSchema,
   rootValue: global,
   graphiql: true,
 }));
+
+// Initialize the users route as a GraphQL route
 app.use('/users', cors(), graphqlHTTP({
   schema: userSchema,
   rootValue: global,
   graphiql: true,
 }));
+
+// Initialize te mixtapes route as a GraphQL route
 app.use('/mixtapes', cors(), graphqlHTTP({
   schema: mixtapeSchema,
   rootValue: global,
   graphiql: true,
 }));
+
+// Initialize the youtube route
+app.use("/youtube", youtubeRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
