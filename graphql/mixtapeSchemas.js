@@ -5,6 +5,7 @@ const GraphQLNonNull = require('graphql').GraphQLNonNull;
 const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
 const MixtapeModel = require('../models/Mixtape');
+const CommentModel = require('../models/Comment');
 const { GraphQLBoolean, GraphQLInputObjectType } = require('graphql');
 const { update } = require('../models/Mixtape');
 
@@ -291,45 +292,6 @@ var queryType = new GraphQLObjectType({
                     return MixtapeModel.find({title: {$regex: params.searchTerm, $options: "i"}}).exec();
                 }
             },
-
-            comments: {
-                type: new GraphQLList(commentsType),
-                resolve: function () {
-                    const comments = MixtapeModel.comments.find().exec()
-                    if (!comments) {
-                        throw new Error('Error')
-                    }
-                    return comments
-                }
-            },
-            comment: {
-                type: commentsType,
-                args: {
-                    id: {
-                        name: '_id',
-                        type: GraphQLString,
-                    },
-                },
-                resolve: function (root, params) {
-                    const commentDetails = MixtapeModel.comments.findById(params.id).exec()
-                    if (!commentDetails) {
-                        throw new Error('Error')
-                    }
-                    return commentDetails
-                }
-            },
-            queryComments: {
-                type: new GraphQLList(commentsType),
-                args: {
-                    searchTerm: {
-                        type: new GraphQLNonNull(GraphQLString)
-                    }
-                },
-                resolve: function(root, params) {
-                    return MixtapeModel.comments.find({content: {$regex: params.searchTerm, $options: "i"}}).exec();
-                }
-            },
-            
         }
     }
 });
@@ -494,6 +456,14 @@ var mutation = new GraphQLObjectType({
                     return remMixtape;
                 }
             },
+            removeMixtapes: {
+                type: GraphQLBoolean,
+                resolve: function () {
+                    MixtapeModel.deleteMany({}).exec();
+                    return true;
+                }
+            },
+
             addSongs: {
                 type: mixtapeType,
                 args: {
@@ -524,39 +494,42 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findOneAndUpdate({_id: params.id}, {$set: {songs: params.songs}}, {new: true}).exec();
                 }
             },
-            addComments: {
-                type: mixtapeType,
-                args: {
-                    id: {
-                        name: "_id",
-                        type: new GraphQLNonNull(GraphQLString)
-                    },
-                    comments: {
-                        type: new GraphQLNonNull(new GraphQLList(commentsInputType))
-                    }
-                },
-                resolve: function (root, params) {
-                   return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {comments: {$each: params.comments}}}, {new: true}).exec();
-                }
-            },
-            addReplies: {
-                type: commentsType,
-                args: {
-                    replies: {
-                        type: new GraphQLNonNull(new GraphQLList(repliesInputType))
-                    }
-                },
-                resolve: function (root, params) {
-                   return MixtapeModel.comments.findOneAndUpdate({_id: params.id}, { $push: {replies: {$each: params.replies}}}, {new: true}).exec();
-                }
-            },
-            removeMixtapes: {
-                type: GraphQLBoolean,
-                resolve: function () {
-                    MixtapeModel.deleteMany({}).exec();
-                    return true;
-                }
-            }
+            // addComments: {
+            //     type: mixtapeType,
+            //     args: {
+            //         id: {
+            //             name: "_id",
+            //             type: new GraphQLNonNull(GraphQLString)
+            //         },
+            //         comment: {
+            //             type: new GraphQLNonNull(commentsInputType)
+            //         }
+            //     },
+            //     resolve: function (root, params) {
+            //         const commentModel = new CommentModel(params.comment);
+            //         const newComment = commentModel.save();
+            //         if (!newComment) {
+            //             throw new Error('Error');
+            //         }
+            //         return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {comments: newComment}}, {new: true}).exec();
+            //     }
+            // },
+            // addReplies: {
+            //     type: commentsType,
+            //     args: {
+            //         id: {
+            //             name: "_id",
+            //             type: new GraphQLNonNull(GraphQLString)
+            //         },
+            //         replies: {
+            //             type: new GraphQLNonNull(new GraphQLList(repliesInputType))
+            //         }
+            //     },
+            //     resolve: function (root, params) {
+            //        return MixtapeModel.comments.findOneAndUpdate({_id: params.id}, { $push: {replies: {$each: params.replies}}}, {new: true}).exec();
+            //     }
+            // },
+
         }
     }
 });
