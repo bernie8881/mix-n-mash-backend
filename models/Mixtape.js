@@ -15,7 +15,19 @@ const MixtapeSchema = new mongoose.Schema({
   listens: Number,
   likes: Number,
   dislikes: Number,
-  // comments: [CommentsModel],
+  comments: [{
+    commentId: String,	
+    replies: [{
+      userId: String,
+      username: String,
+      content: String,	
+      publishingTime: Number,	
+    }],
+    userId: String,
+    username: String,
+    content: String,	
+    publishingTime: Number,	
+  }],
   private: Boolean,
   collaborators: [{
     userId: String,
