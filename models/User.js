@@ -17,12 +17,20 @@ const UserSchema = new mongoose.Schema({
     ],
     sentMashmateRequests: [
         {
-        senderId: String, recipientId: String, username: String, timeSent: Number, seen: Boolean
+            senderId: String,
+            recipientId: String,
+            username: String,
+            timeSent: { type: Date, default: Date.now },
+            seen: Boolean
         }
     ],
     receivedMashmateRequests: [
         {
-        senderId: String, recipientId: String, username: String, timeSent: Number, seen: Boolean
+            senderId: String,
+            recipientId: String,
+            username: String,
+            timeSent: { type: Date, default: Date.now },
+            seen: Boolean
         }
     ],
     active: Boolean

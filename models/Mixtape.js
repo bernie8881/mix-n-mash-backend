@@ -16,17 +16,17 @@ const MixtapeSchema = new mongoose.Schema({
   likes: Number,
   dislikes: Number,
   comments: [{
-    commentId: String,	
+    id: String,	
+    userId: String,
+    username: String,
+    content: String,	
+    publishingTime: { type: Date, default: Date.now },
     replies: [{
       userId: String,
       username: String,
       content: String,	
-      publishingTime: Number,	
+      publishingTime: { type: Date, default: Date.now },
     }],
-    userId: String,
-    username: String,
-    content: String,	
-    publishingTime: Number,	
   }],
   private: Boolean,
   collaborators: [{
@@ -34,7 +34,7 @@ const MixtapeSchema = new mongoose.Schema({
     username: String,
     privilegeLevel: String,
   }],
-  timeCreated: Number,
+  timeCreated: { type: Date, default: Date.now },
   likesPerDay: [Number],
   listensPerDay: [Number],
 });

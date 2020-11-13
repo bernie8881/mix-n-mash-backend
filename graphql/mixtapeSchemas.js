@@ -4,10 +4,9 @@ const GraphQLList = require('graphql').GraphQLList;
 const GraphQLNonNull = require('graphql').GraphQLNonNull;
 const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
+const GraphQLDate = require('graphql-date');
 const MixtapeModel = require('../models/Mixtape');
-const CommentModel = require('../models/Comment');
 const { GraphQLBoolean, GraphQLInputObjectType } = require('graphql');
-const { update } = require('../models/Mixtape');
 
 const songsType = new GraphQLObjectType({
     name: 'song',
@@ -37,7 +36,7 @@ const songsInputType = new GraphQLInputObjectType({
     }
 });
 
-const repliesType = new GraphQLObjectType({
+const replyType = new GraphQLObjectType({
     name: 'reply',
     fields: function(){
         return {
@@ -51,13 +50,13 @@ const repliesType = new GraphQLObjectType({
                 type: GraphQLString
             },
             publishingTime: {
-                type: GraphQLInt
+                type: GraphQLDate
             }
         }
     }
 });
 
-const repliesInputType = new GraphQLInputObjectType({
+const replyInputType = new GraphQLInputObjectType({
     name: 'replyInput',
     fields: function(){
         return {
@@ -69,23 +68,20 @@ const repliesInputType = new GraphQLInputObjectType({
             },
             content: {
                 type: GraphQLString
-            },
-            publishingTime: {
-                type: GraphQLInt
             }
         }
     }
 });
 
-const commentsType = new GraphQLObjectType({
+const commentType = new GraphQLObjectType({
     name: 'comment',
     fields: function(){
         return {
-            commentId: {
+            id: {
                 type: GraphQLString
             },
             replies:{
-                type: new GraphQLList(repliesType)
+                type: new GraphQLList(replyType)
             },
             userId: {
                 type: GraphQLString
@@ -97,22 +93,16 @@ const commentsType = new GraphQLObjectType({
                 type: GraphQLString
             },
             publishingTime: {
-                type: GraphQLInt
+                type: GraphQLDate
             }
         }
     }
 });
 
-const commentsInputType = new GraphQLInputObjectType({
+const commentInputType = new GraphQLInputObjectType({
     name: 'commentInput',
     fields: function(){
         return {
-            commentId: {
-                type: GraphQLString
-            },
-            replies: {
-                type: new GraphQLNonNull( new GraphQLList(repliesInputType))
-            },
             userId: {
                 type: GraphQLString
             },
@@ -121,9 +111,6 @@ const commentsInputType = new GraphQLInputObjectType({
             },
             content: {
                 type: GraphQLString
-            },
-            publishingTime: {
-                type: GraphQLInt
             }
         }
     }
@@ -201,7 +188,7 @@ const mixtapeType = new GraphQLObjectType({
                 type: GraphQLInt
             },
             comments: {
-                type: new GraphQLList(commentsType)
+                type: new GraphQLList(commentType)
             },
             private: {
                 type: GraphQLBoolean
@@ -210,7 +197,7 @@ const mixtapeType = new GraphQLObjectType({
                 type: new GraphQLList(collaboratorsType)
             },
             timeCreated: {
-                type: GraphQLInt
+                type: GraphQLDate
             },
             likesPerDay: {
                 type: new GraphQLList(GraphQLInt)
@@ -300,6 +287,39 @@ var mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: function () {
         return {
+            createNewMixtape: {
+                type: mixtapeType,
+                args: {
+                    ownerId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    ownerName: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve: function(root, params){
+                    params.title = "Untitled";
+                    params.description = "Your new Mixtape";
+                    params.genres = [];
+                    params.image = [];
+                    params.songs = [];
+                    params.listens = 0;
+                    params.likes = 0;
+                    params.dislikes = 0;
+                    params.comments = [];
+                    params.private = true;
+                    params.collaborators = [];
+                    params.likesPerDay = [];
+                    params.listensPerDay = [];
+
+                    const mixtapeModel = new MixtapeModel(params);
+                    const newMixtape = mixtapeModel.save();
+                    if (!newMixtape) {
+                        throw new Error('Error');
+                    }
+                    return newMixtape
+                }
+            },
             addMixtape: {
                 type: mixtapeType,
                 args: {
@@ -334,16 +354,13 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLInt)
                     },
                     comments: {
-                        type: new GraphQLNonNull( new GraphQLList(commentsInputType))
+                        type: new GraphQLNonNull( new GraphQLList(commentInputType))
                     },
                     private: {
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
                     collaborators: {
                         type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
-                    },
-                    timeCreated: {
-                        type: new GraphQLNonNull(GraphQLInt)
                     },
                     likesPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))
@@ -399,16 +416,13 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLInt)
                     },
                     comments: {
-                        type: new GraphQLNonNull( new GraphQLList(commentsInputType))
+                        type: new GraphQLNonNull( new GraphQLList(commentInputType))
                     },
                     private: {
                         type: new GraphQLNonNull(GraphQLBoolean)
                     },
                     collaborators: {
                         type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
-                    },
-                    timeCreated: {
-                        type: new GraphQLNonNull(GraphQLInt)
                     },
                     likesPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))
@@ -432,7 +446,6 @@ var mutation = new GraphQLObjectType({
                             comments: params.comments,
                             private: params.private,
                             collaborators:params.collaborators,
-                            timeCreated: params.timeCreated,
                             likesPerDay: params.likesPerDay,
                             listensPerDay: params.listensPerDay,
                         }, 
@@ -494,42 +507,46 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findOneAndUpdate({_id: params.id}, {$set: {songs: params.songs}}, {new: true}).exec();
                 }
             },
-            // addComments: {
-            //     type: mixtapeType,
-            //     args: {
-            //         id: {
-            //             name: "_id",
-            //             type: new GraphQLNonNull(GraphQLString)
-            //         },
-            //         comment: {
-            //             type: new GraphQLNonNull(commentsInputType)
-            //         }
-            //     },
-            //     resolve: function (root, params) {
-            //         const commentModel = new CommentModel(params.comment);
-            //         const newComment = commentModel.save();
-            //         if (!newComment) {
-            //             throw new Error('Error');
-            //         }
-            //         return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {comments: newComment}}, {new: true}).exec();
-            //     }
-            // },
-            // addReplies: {
-            //     type: commentsType,
-            //     args: {
-            //         id: {
-            //             name: "_id",
-            //             type: new GraphQLNonNull(GraphQLString)
-            //         },
-            //         replies: {
-            //             type: new GraphQLNonNull(new GraphQLList(repliesInputType))
-            //         }
-            //     },
-            //     resolve: function (root, params) {
-            //        return MixtapeModel.comments.findOneAndUpdate({_id: params.id}, { $push: {replies: {$each: params.replies}}}, {new: true}).exec();
-            //     }
-            // },
+            addComment: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    comment: {
+                        type: new GraphQLNonNull(commentInputType)
+                    }
+                },
+                resolve: function (root, params){
+                    // Generate a unique id by combining the user ID with the current time
+                    let id = params.comment.userId + Date.now();
+                    params.comment.id = id;
 
+                    // No replies, so empty array
+                    params.comment.replies = [];
+
+                    return MixtapeModel.findOneAndUpdate({_id: params.id}, {$push: {comments: params.comment}}, {new: true}).exec();
+                }
+            },
+            addReply: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    commentId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    reply: {
+                        type: new GraphQLNonNull(replyInputType)
+                    }
+                },
+                resolve: function (root, params){
+                    return MixtapeModel.findOneAndUpdate({$and: [{_id: params.id}, {"comments.id": params.commentId}]}, {$push: {"comments.$.replies": params.reply}}, {new: true});
+                }
+            }
         }
     }
 });

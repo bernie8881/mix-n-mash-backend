@@ -51,7 +51,7 @@ var mashmateRequestType = new GraphQLObjectType({
                 type: GraphQLString
             },
             timeSent: {
-                type: GraphQLInt
+                type: GraphQLDate
             },
             seen: {
                 type: GraphQLBoolean
@@ -72,9 +72,6 @@ var mashmateRequestInputType = new GraphQLInputObjectType({
             },
             username: {
                 type: GraphQLString
-            },
-            timeSent: {
-                type: GraphQLInt
             },
             seen: {
                 type: GraphQLBoolean
@@ -219,6 +216,38 @@ var mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: function () {
         return {
+            createNewUser: {
+                type: userType,
+                args: {
+                    username: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    email: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    hashedPassword:{
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params){
+                    params.bio = "";
+                    params.numFollowers = 0;
+                    params.following = [];
+                    params.mashmates = [];
+                    params.mixtapes = [];
+                    params.genrePreferences = [];
+                    params.sentMashmateRequests = [];
+                    params.receivedMashmateRequests = []
+                    params.active = true;
+
+                    const userModel = new UserModel(params);
+                    const newUser = userModel.save();
+                    if (!newUser) {
+                        throw new Error('Error');
+                    }
+                    return newUser;
+                }
+            },
             addUser: {
                 type: userType,
                 args: {
