@@ -6,9 +6,9 @@ const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
 const GraphQLDate = require('graphql-date');
 const MixtapeModel = require('../models/Mixtape');
-const { GraphQLBoolean, GraphQLInputObjectType } = require('graphql');
+const { GraphQLBoolean, GraphQLInputObjectType, GraphQLScalarType } = require('graphql');
 
-const songsType = new GraphQLObjectType({
+const songType = new GraphQLObjectType({
     name: 'song',
     fields: function(){
         return {
@@ -22,7 +22,7 @@ const songsType = new GraphQLObjectType({
     }
 });
 
-const songsInputType = new GraphQLInputObjectType({
+const songInputType = new GraphQLInputObjectType({
     name: 'songInput',
     fields: function(){
         return {
@@ -170,7 +170,7 @@ const mixtapeType = new GraphQLObjectType({
                 type: new GraphQLList(GraphQLString)
             },
             songs: {
-                type: new GraphQLList(songsType)
+                type: new GraphQLList(songType)
             },
             ownerId: {
                 type: GraphQLString
@@ -320,6 +320,70 @@ var mutation = new GraphQLObjectType({
                     return newMixtape
                 }
             },
+            createMixtapeFromBase: {
+                type: mixtapeType,
+                args: {
+                    ownerId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    ownerName: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    title: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    description: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genres: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    image: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
+                    }
+                },
+                resolve: function(root, params){
+                    params.listens = 0;
+                    params.likes = 0;
+                    params.dislikes = 0;
+                    params.comments = [];
+                    params.private = true;
+                    params.collaborators = [];
+                    params.likesPerDay = [];
+                    params.listensPerDay = [];
+
+                    const mixtapeModel = new MixtapeModel(params);
+                    const newMixtape = mixtapeModel.save();
+                    if (!newMixtape) {
+                        throw new Error('Error');
+                    }
+                    return newMixtape
+                }
+            },
+            mashMixtape: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    title: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genres: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {title: params.title, songs: params.songs, genres: params.genres}).exec();
+                }
+            },
             addMixtape: {
                 type: mixtapeType,
                 args: {
@@ -336,7 +400,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull( new GraphQLList(GraphQLString))
                     },
                     songs: {
-                        type: new GraphQLNonNull( new GraphQLList(songsInputType))
+                        type: new GraphQLNonNull( new GraphQLList(songInputType))
                     },
                     ownerId: {
                         type: new GraphQLNonNull(GraphQLString)
@@ -398,7 +462,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull( new GraphQLList(GraphQLString))
                     },
                     songs: {
-                        type: new GraphQLNonNull( new GraphQLList(songsInputType))
+                        type: new GraphQLNonNull( new GraphQLList(songInputType))
                     },
                     ownerId: {
                         type: new GraphQLNonNull(GraphQLString)
@@ -485,7 +549,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLString)
                     },
                     songs: {
-                        type: new GraphQLNonNull(new GraphQLList(songsInputType))
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
                     }
                 },
                 resolve: function (root, params) {
@@ -500,7 +564,7 @@ var mutation = new GraphQLObjectType({
                         type: new GraphQLNonNull(GraphQLString)
                     },
                     songs: {
-                        type: new GraphQLNonNull(new GraphQLList(songsInputType))
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
                     }
                 },
                 resolve: function (root, params) {
