@@ -521,12 +521,13 @@ var mutation = new GraphQLObjectType({
             removeMixtape: {
                 type: mixtapeType,
                 args: {
-                    _id: {
+                    id: {
+                        name: "_id",
                         type: new GraphQLNonNull(GraphQLString)
                     }
                 },
                 resolve(root, params) {
-                    const remMixtape = MixtapeModel.findByIdAndRemove(params._id).exec();
+                    const remMixtape = MixtapeModel.findByIdAndRemove(params.id).exec();
                     if (!remMixtape) {
                         throw new Error('Error')
                     }
