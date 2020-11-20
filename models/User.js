@@ -12,6 +12,8 @@ const UserSchema = new mongoose.Schema({
         {id: String, username: String}
     ],
     mixtapes: [String],
+    likedMixtapes: [String],
+    dislikedMixtapes: [String],
     genrePreferences: [
         {genre: String, genreIncVal: Number}
     ],

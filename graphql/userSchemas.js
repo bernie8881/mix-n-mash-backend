@@ -139,6 +139,12 @@ var userType = new GraphQLObjectType({
             mixtapes: {
                 type: new GraphQLList(GraphQLString)
             },
+            likedMixtapes: {
+                type: new GraphQLList(GraphQLString)
+            },
+            dislikedMixtapes: {
+                type: new GraphQLList(GraphQLString)
+            },
             genrePreferences: {
                 type: new GraphQLList(genrePreferencesType)
             },
@@ -275,6 +281,12 @@ var mutation = new GraphQLObjectType({
                     mixtapes: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLString))
                     },
+                    likedMixtapes: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    dislikedMixtapes: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
                     genrePreferences: {
                         type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
                     },
@@ -309,7 +321,6 @@ var mutation = new GraphQLObjectType({
                     }
                 },
                 resolve: function (root, params) {
-                    console.log(params)
                     let temp = UserModel.findByIdAndUpdate(params.id,
                     {
                         $push: {
@@ -317,6 +328,54 @@ var mutation = new GraphQLObjectType({
                         }
                     }).exec();
                     return temp;
+                }
+            },
+            setLikeMixtape: {
+                type: userType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: GraphQLString
+                    },
+                    mixtapeId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    like: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
+                    }
+                },
+                resolve: function (root, params) {
+                    if(params.like){
+                        // Add to list of liked mixtapes
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                    } else {
+                        // Remove from list of liked mixtapes
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                    }
+                }
+            },
+            setDislikeMixtape: {
+                type: userType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: GraphQLString
+                    },
+                    mixtapeId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    dislike: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
+                    }
+                },
+                resolve: function (root, params) {
+                    if(params.dislike){
+                        // Add to list of liked mixtapes
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                    } else {
+                        // Remove from list of liked mixtapes
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                    }
                 }
             },
             removeUsers: {
