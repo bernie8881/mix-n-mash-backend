@@ -347,7 +347,7 @@ var mutation = new GraphQLObjectType({
                 resolve: function (root, params) {
                     if(params.like){
                         // Add to list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$push: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {likedMixtapes: params.mixtapeId}, $pull: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
                     } else {
                         // Remove from list of liked mixtapes
                         return UserModel.findByIdAndUpdate(params.id, {$pull: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
@@ -371,7 +371,7 @@ var mutation = new GraphQLObjectType({
                 resolve: function (root, params) {
                     if(params.dislike){
                         // Add to list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$push: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {dislikedMixtapes: params.mixtapeId}, $pull: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
                     } else {
                         // Remove from list of liked mixtapes
                         return UserModel.findByIdAndUpdate(params.id, {$pull: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();

@@ -626,6 +626,21 @@ var mutation = new GraphQLObjectType({
                 resolve: function(root, params){
                     return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {likes: params.incAmount}}, {new: true}).exec();
                 }
+            },
+            updateDislikes: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    incAmount: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {dislikes: params.incAmount}}, {new: true}).exec();
+                }
             }
         }
     }
