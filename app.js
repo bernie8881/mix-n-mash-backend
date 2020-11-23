@@ -8,7 +8,10 @@ const graphqlHTTP = require('express-graphql');
 const testSchema = require("./graphql/testSchemas");
 const userSchema = require("./graphql/userSchemas");
 const mixtapeSchema = require("./graphql/mixtapeSchemas");
+const bodyParser = require("body-parser");
+const session = require("express-session");
 const cors = require("cors");
+const passport = require("passport");
 
 mongoose.connect('mongodb://localhost/node-graphql', { promiseLibrary: require('bluebird'), useNewUrlParser: true })
   .then(() =>  console.log('connection successful'))
@@ -16,6 +19,7 @@ mongoose.connect('mongodb://localhost/node-graphql', { promiseLibrary: require('
 
 const indexRouter = require('./routes/index');
 const youtubeRouter = require("./routes/youtube");
+const authRouter = require("./routes/auth")
 
 const app = express();
 
@@ -31,7 +35,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 
-app.use('*', cors());
+// app.use('*', cors(
+//   origin: "http://localhost:3001",
+// ));
 
 app.use('/test', cors(), graphqlHTTP({
   schema: testSchema,
@@ -55,6 +61,29 @@ app.use('/mixtapes', cors(), graphqlHTTP({
 
 // Initialize the youtube route
 app.use("/youtube", youtubeRouter);
+
+// Auth route
+app.use("/auth", bodyParser.json());
+app.use("/auth", bodyParser.urlencoded({extended: true}));
+
+app.use("/auth", cors({
+  origin: "http://localhost:3001",
+  credentials: true
+}))
+
+app.use("/auth", session({
+  secret: "secretcode",
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.use("/auth", cookieParser("secretcode"));
+
+app.use("/auth", passport.initialize());
+app.use("/auth", passport.session());
+require("./routes/passportConfig")(passport);
+
+app.use("/auth", authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
