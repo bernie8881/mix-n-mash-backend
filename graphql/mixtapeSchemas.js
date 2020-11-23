@@ -541,7 +541,66 @@ var mutation = new GraphQLObjectType({
                     return true;
                 }
             },
-
+            updateMixtapeTitle: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    title: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params.id,
+                        {   title: params.title,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
+            updateMixtapeDescription: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    description: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params.id,
+                        {   description: params.description,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
+            updateMixtapeGenres: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genres: {
+                        type: new GraphQLNonNull( new GraphQLList(GraphQLString))
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params.id,
+                        {   genres: params.genres,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
             addSongs: {
                 type: mixtapeType,
                 args: {
@@ -625,6 +684,21 @@ var mutation = new GraphQLObjectType({
                 },
                 resolve: function(root, params){
                     return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {likes: params.incAmount}}, {new: true}).exec();
+                }
+            },
+            updateDislikes: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    incAmount: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {dislikes: params.incAmount}}, {new: true}).exec();
                 }
             }
         }
