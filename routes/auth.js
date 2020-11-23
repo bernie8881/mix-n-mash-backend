@@ -86,6 +86,34 @@ router.post("/signup", async (req, res) => {
     });
 });
 
+router.post("/changepassword", async (req, res) => {
+    UserModel.findOne({$or: [{email: req.body.username}, {username: req.body.username}] }, 
+        (err, user) => {
+            if(err) throw err;
+
+            if(!user){
+                res.status(404).send("No user found");
+            } else {
+                bcrypt.compare(req.body.password, user.hashedPassword, async (err, result) => {
+                    if(err) throw err;
+                    if(result === true){
+                        // User exists and password matches - change password
+                        const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+                        user.update({hashedPassword: hashedPassword}, (err, result) => {
+                            if(err) throw err;
+
+                            // If no error, return success
+                            res.send("Success");
+                        })
+                    } else {
+                        // Password Mismatch
+                        res.status(403).send("Password Incorrect");
+                    }
+                });
+            }
+        });
+});
+
 router.get("/user", (req, res) => {
     if(req.user){
         res.send(req.user);
