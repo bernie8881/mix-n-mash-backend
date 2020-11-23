@@ -541,7 +541,82 @@ var mutation = new GraphQLObjectType({
                     return true;
                 }
             },
+            updateMixtapeTitle: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    title: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params.id,
+                        {   title: params.title,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
+            addSongs: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
+                    }
+                },
+                resolve: function (root, params) {
+                   return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {songs: {$each: params.songs}}}, {new: true}).exec();
+                }
+            },
 
+            updateMixtapeDescription: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    description: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params._id,
+                        {   description: params.description,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
+            updateMixtapeGenres: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genres: {
+                        type: new GraphQLNonNull( new GraphQLList(GraphQLString))
+                    },
+                },
+                resolve(root, params) {
+                    return MixtapeModel.findByIdAndUpdate(params._id,
+                        {   genres: params.genres,
+                        }, 
+                        function (err) {
+                        if (err) return next(err);
+                    });
+                }
+            },
             addSongs: {
                 type: mixtapeType,
                 args: {
