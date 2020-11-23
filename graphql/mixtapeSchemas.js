@@ -561,22 +561,6 @@ var mutation = new GraphQLObjectType({
                     });
                 }
             },
-            addSongs: {
-                type: mixtapeType,
-                args: {
-                    id: {
-                        name: "_id",
-                        type: new GraphQLNonNull(GraphQLString)
-                    },
-                    songs: {
-                        type: new GraphQLNonNull(new GraphQLList(songInputType))
-                    }
-                },
-                resolve: function (root, params) {
-                   return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {songs: {$each: params.songs}}}, {new: true}).exec();
-                }
-            },
-
             updateMixtapeDescription: {
                 type: mixtapeType,
                 args: {
@@ -589,7 +573,7 @@ var mutation = new GraphQLObjectType({
                     },
                 },
                 resolve(root, params) {
-                    return MixtapeModel.findByIdAndUpdate(params._id,
+                    return MixtapeModel.findByIdAndUpdate(params.id,
                         {   description: params.description,
                         }, 
                         function (err) {
@@ -609,7 +593,7 @@ var mutation = new GraphQLObjectType({
                     },
                 },
                 resolve(root, params) {
-                    return MixtapeModel.findByIdAndUpdate(params._id,
+                    return MixtapeModel.findByIdAndUpdate(params.id,
                         {   genres: params.genres,
                         }, 
                         function (err) {
