@@ -593,12 +593,7 @@ var mutation = new GraphQLObjectType({
                     },
                 },
                 resolve(root, params) {
-                    return MixtapeModel.findByIdAndUpdate(params.id,
-                        {   genres: params.genres,
-                        }, 
-                        function (err) {
-                        if (err) return next(err);
-                    });
+                    return MixtapeModel.findByIdAndUpdate({_id: params.id}, {genres: params.genres}, {new: true}).exec();
                 }
             },
             addSongs: {
