@@ -211,7 +211,7 @@ var queryType = new GraphQLObjectType({
                     }
                 },
                 resolve: function (root, params) {
-                    return UserModel.find({username: {$regex: params.searchTerm, $options: 'i'}}).exec();
+                    return UserModel.find({username: {$regex: params.searchTerm, $options: 'i'}, active: true}).exec();
                 }
             }
         }
@@ -383,6 +383,45 @@ var mutation = new GraphQLObjectType({
                 resolve: function () {
                     UserModel.deleteMany({}).exec();
                     return true;
+                }
+            },
+            updateBio: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    },
+                    bio: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    return UserModel.findByIdAndUpdate(params.id, {$set: {bio: params.bio}}, {new: true}).exec();
+                }
+            },
+            deactivateAccount: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    }
+                },
+                resolve: function(root, params) {
+                    return UserModel.findByIdAndUpdate(params.id, {$set: {active: false}}, {new:true}).exec();
+                }
+            },
+            reactivateAccount: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    }
+                },
+                resolve: function(root, params) {
+                    return UserModel.findByIdAndUpdate(params.id, {$set: {active: true}}, {new:true}).exec();
                 }
             }
         }

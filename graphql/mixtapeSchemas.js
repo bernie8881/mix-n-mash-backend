@@ -204,6 +204,9 @@ const mixtapeType = new GraphQLObjectType({
             },
             listensPerDay: {
                 type: new GraphQLList(GraphQLInt)
+            },
+            ownerActive: {
+                type: new GraphQLNonNull(GraphQLBoolean)
             }
         }
     }
@@ -241,8 +244,16 @@ var queryType = new GraphQLObjectType({
             },
             hottestMixtapes: {
                 type: new GraphQLList(mixtapeType),
-                resolve: function () {
-                    const mixtapes = MixtapeModel.find().exec()
+                args: {
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function (root, params) {
+                    const mixtapes = MixtapeModel.find({
+                        $and: [{private: false},
+                            {ownerActive: true}]
+                    }).exec();
                     if (!mixtapes) {
                         throw new Error('Error')
                     }
@@ -257,12 +268,62 @@ var queryType = new GraphQLObjectType({
                     }
                 },
                 resolve: function(root, params) {
-                    const mixtapes = MixtapeModel.find(
-                        {
+                    const mixtapes = MixtapeModel.find({
+                        $and: [{
                             $or:[
                                 {ownerId: params.userId},
-                                {"collaborators.userId": params.userId}
-                            ]
+                                {"collaborators.userId": params.userId},
+                                ]
+                            }, 
+                            {ownerActive: true}]
+                    }).exec();
+                    return mixtapes
+                }
+            },
+            getAllUserMixtapes: {
+                type: new GraphQLList(mixtapeType),
+                args: {
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    const mixtapes = MixtapeModel.find({
+                            $or:[
+                                {ownerId: params.userId},
+                                {"collaborators.userId": params.userId},
+                                ]
+                    }).exec();
+                    return mixtapes
+                }
+            },
+            getUserPageMixtapes: {
+                type: new GraphQLList(mixtapeType),
+                args: {
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    otherUserId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    const mixtapes = MixtapeModel.find(
+                        {
+                            $and: [{
+                                $or:[
+                                    {ownerId: params.userId},
+                                    {"collaborators.userId": params.userId},
+                                    {private: false}
+                                ]
+                            },
+                            {
+                                $or: [
+                                    {ownerId: params.otherUserId},
+                                    {"collaborators.userId": params.otherUserId}
+                                ]
+                            },
+                            {ownerActive: true}]
                         }
                     ).exec();
                     return mixtapes
@@ -273,10 +334,14 @@ var queryType = new GraphQLObjectType({
                 args: {
                     searchTerm: {
                         type: new GraphQLNonNull(GraphQLString)
+                    },
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
                     }
                 },
                 resolve: function(root, params) {
-                    return MixtapeModel.find({title: {$regex: params.searchTerm, $options: "i"}}).exec();
+                    return MixtapeModel.find({title: {$regex: params.searchTerm, $options: "i"},
+                        $and: [{$or:[{ownerId: params.userId},{"collaborators.userId": params.userId},{private: false}]}, {ownerActive: true}]}).exec();
                 }
             },
         }
@@ -311,6 +376,7 @@ var mutation = new GraphQLObjectType({
                     params.collaborators = [];
                     params.likesPerDay = [];
                     params.listensPerDay = [];
+                    params.ownerActive = true;
 
                     const mixtapeModel = new MixtapeModel(params);
                     const newMixtape = mixtapeModel.save();
@@ -354,6 +420,7 @@ var mutation = new GraphQLObjectType({
                     params.collaborators = [];
                     params.likesPerDay = [];
                     params.listensPerDay = [];
+                    params.ownerActive = true;
 
                     const mixtapeModel = new MixtapeModel(params);
                     const newMixtape = mixtapeModel.save();
@@ -431,6 +498,9 @@ var mutation = new GraphQLObjectType({
                     },
                     listensPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))
+                    },
+                    ownerActive: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
                     }
                 },
                 resolve: function (root, params) {
@@ -493,6 +563,9 @@ var mutation = new GraphQLObjectType({
                     },
                     listensPerDay: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLInt))
+                    },
+                    ownerActive: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
                     }
                 },
                 resolve(root, params) {
@@ -512,6 +585,7 @@ var mutation = new GraphQLObjectType({
                             collaborators:params.collaborators,
                             likesPerDay: params.likesPerDay,
                             listensPerDay: params.listensPerDay,
+                            ownerActive: params.ownerActive
                         }, 
                         function (err) {
                         if (err) return next(err);
@@ -694,6 +768,36 @@ var mutation = new GraphQLObjectType({
                 },
                 resolve: function(root, params){
                     return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {dislikes: params.incAmount}}, {new: true}).exec();
+                }
+            },
+            updatePrivate: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    private: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$set: {private: params.private}}, {new: true}).exec()
+                }
+            },
+            updateOwnerActive: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    ownerActive: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$set: {ownerActive: params.ownerActive}}, {new: true}).exec();
                 }
             }
         }

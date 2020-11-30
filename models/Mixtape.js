@@ -37,6 +37,7 @@ const MixtapeSchema = new mongoose.Schema({
   timeCreated: { type: Date, default: Date.now },
   likesPerDay: [Number],
   listensPerDay: [Number],
+  ownerActive: Boolean
 });
 
 module.exports = mongoose.model('Mixtape', MixtapeSchema);
