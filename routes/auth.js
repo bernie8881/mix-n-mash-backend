@@ -1,8 +1,73 @@
 const express = require('express');
 let router = express.Router();
 const UserModel = require('../models/User');
+const ForgotPasswordModel = require('../models/ForgotPassword');
 const bcrypt = require("bcryptjs");
 const passport = require("passport");
+
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey("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");
+
+// sgMail
+//   .send(msg)
+//   .then(() => {
+//     console.log('Email sent')
+//   })
+//   .catch((error) => {
+//     console.error(error)
+// });
+
+router.post("/forgotPassword", (req, res, next) => {
+    const email = req.body.email;
+    UserModel.findOne({email: email},async(err, result)=>{
+        if (err){
+            throw err;
+        }
+        if (result){
+
+            const forgotpwd = new ForgotPasswordModel({email: email});
+            await forgotpwd.save();
+
+            tempCode = forgotpwd._id;
+
+            const msg = {
+                to: email, // Change to your recipient
+                from: 'mixnmash.noreply@gmail.com', // Change to your verified sender
+                subject: 'Forgotten Mix N\' Mash Password',
+                text: 'Here is your temporary code: '+tempCode,
+            }
+            sgMail.send(msg);
+        }
+        res.send("success");
+    })
+});
+
+router.post("/verifyCode",(req, res, next) => {
+    const tempCode = req.body.tempCode;
+    console.log(tempCode);
+    ForgotPasswordModel.findById(tempCode,async(err, result)=>{
+        if (err){
+            throw err;
+        }
+        if (result){
+            const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+            UserModel.findOneAndUpdate({email: req.body.email}, {hashedPassword: hashedPassword}, (err,result)=>{
+                if(err){
+                    throw err
+                }
+                if(result){
+                    res.send("success");
+                }
+                else{
+                    res.status(404).send("failure");
+                }
+            });
+        }
+        else{
+            res.status(401).send("failure");
+        }
+    });
+});
 
 router.post("/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
