@@ -41,7 +41,7 @@ router.post("/forgotPassword", (req, res, next) => {
 
 router.post("/verifyCode",(req, res, next) => {
     const tempCode = req.body.tempCode;
-    
+
     ForgotPasswordModel.findById(tempCode, async (err, result)=>{
         if (err){
             if(err.name === "CastError"){
@@ -53,8 +53,10 @@ router.post("/verifyCode",(req, res, next) => {
             }
         }
 
+        console.log(result.email, req.body.email);
+
         // We found a result and it is the correct email
-        if (result && result.email === res.email){
+        if (result && result.email === req.body.email){
             // Check if the request is still valid
             const expirationTime = new Date(result.timeCreated).getTime() + 1000 * 60 * 20;
 
