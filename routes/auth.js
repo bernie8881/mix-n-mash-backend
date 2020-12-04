@@ -8,33 +8,30 @@ const passport = require("passport");
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey("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");
 
-// sgMail
-//   .send(msg)
-//   .then(() => {
-//     console.log('Email sent')
-//   })
-//   .catch((error) => {
-//     console.error(error)
-// });
-
 router.post("/forgotPassword", (req, res, next) => {
     const email = req.body.email;
-    UserModel.findOne({email: email},async(err, result)=>{
-        if (err){
-            throw err;
-        }
-        if (result){
 
+    // Try to find a valid email
+    UserModel.findOne({email: email}, async (err, result)=>{
+        if (err) throw err;
+
+        // We found a valid email
+        if (result){
+            // Delete any current forgotPassword requests for this user
+            await ForgotPasswordModel.deleteMany({email: email});
+
+            // Create a new forgotPassword request for this user
             const forgotpwd = new ForgotPasswordModel({email: email});
             await forgotpwd.save();
 
+            // Extract the id of the new request and use it as the temp code
             tempCode = forgotpwd._id;
 
             const msg = {
-                to: email, // Change to your recipient
-                from: 'mixnmash.noreply@gmail.com', // Change to your verified sender
+                to: email,
+                from: 'mixnmash.noreply@gmail.com',
                 subject: 'Forgotten Mix N\' Mash Password',
-                text: 'Here is your temporary code: '+tempCode,
+                text: 'Here is your temporary code: ' + tempCode + "\n\n This code will expire in 20 minutes.",
             }
             sgMail.send(msg);
         }
@@ -44,27 +41,42 @@ router.post("/forgotPassword", (req, res, next) => {
 
 router.post("/verifyCode",(req, res, next) => {
     const tempCode = req.body.tempCode;
-    console.log(tempCode);
-    ForgotPasswordModel.findById(tempCode,async(err, result)=>{
+    
+    ForgotPasswordModel.findById(tempCode, async (err, result)=>{
         if (err){
-            throw err;
+            if(err.name === "CastError"){
+                // id was invalid
+                res.status(401).send("Invalid")
+                return;
+            } else {
+                throw err;
+            }
         }
-        if (result){
-            const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
-            UserModel.findOneAndUpdate({email: req.body.email}, {hashedPassword: hashedPassword}, (err,result)=>{
-                if(err){
-                    throw err
-                }
-                if(result){
-                    res.send("success");
-                }
-                else{
-                    res.status(404).send("failure");
-                }
-            });
-        }
-        else{
-            res.status(401).send("failure");
+
+        // We found a result and it is the correct email
+        if (result && result.email === res.email){
+            // Check if the request is still valid
+            const expirationTime = new Date(result.timeCreated).getTime() + 1000 * 60 * 20;
+
+            if(Date.now() < expirationTime){
+                // Hash the new password
+                const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+
+                // Update the user model with the new password
+                UserModel.findOneAndUpdate({email: req.body.email}, {hashedPassword: hashedPassword}, (err,result)=>{
+                    if(err) throw err
+
+                    if(result){
+                        res.send("success");
+                    } else{
+                        res.status(404).send("No User");
+                    }
+                });
+            } else {
+                res.status(401).send("Code Expired")
+            }
+        } else{
+            res.status(401).send("Invalid");
         }
     });
 });
