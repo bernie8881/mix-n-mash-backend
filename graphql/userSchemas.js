@@ -208,10 +208,16 @@ var queryType = new GraphQLObjectType({
                 args: {
                     searchTerm: {
                         type: GraphQLString
+                    },
+                    skip: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    limit: {
+                        type: new GraphQLNonNull(GraphQLInt)
                     }
                 },
                 resolve: function (root, params) {
-                    return UserModel.find({username: {$regex: params.searchTerm, $options: 'i'}, active: true}).exec();
+                    return UserModel.find({username: {$regex: params.searchTerm, $options: 'i'}, active: true}).skip(params.skip).limit(params.limit).exec();
                 }
             }
         }

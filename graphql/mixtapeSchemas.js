@@ -199,11 +199,17 @@ const mixtapeType = new GraphQLObjectType({
             timeCreated: {
                 type: GraphQLDate
             },
-            likesPerDay: {
-                type: new GraphQLList(GraphQLInt)
+            likesToday: {
+                type: GraphQLInt
             },
-            listensPerDay: {
-                type: new GraphQLList(GraphQLInt)
+            likesThisWeek: {
+                type: GraphQLInt
+            },
+            listensToday: {
+                type: GraphQLInt
+            },
+            listensThisWeek: {
+                type: GraphQLInt
             },
             ownerActive: {
                 type: new GraphQLNonNull(GraphQLBoolean)
@@ -216,6 +222,7 @@ var queryType = new GraphQLObjectType({
     name: 'Query',
     fields: function () {
         return {
+            // Get all mixtapes
             mixtapes: {
                 type: new GraphQLList(mixtapeType),
                 resolve: function () {
@@ -226,6 +233,8 @@ var queryType = new GraphQLObjectType({
                     return mixtapes
                 }
             },
+
+            // Get one mixtape by id
             mixtape: {
                 type: mixtapeType,
                 args: {
@@ -242,24 +251,90 @@ var queryType = new GraphQLObjectType({
                     return mixtapeDetails
                 }
             },
+
+            // Get the list of hottest mixtapes based on user preferences
             hottestMixtapes: {
                 type: new GraphQLList(mixtapeType),
                 args: {
                     userId: {
                         type: new GraphQLNonNull(GraphQLString)
+                    },
+                    criteria: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    skip: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    limit: {
+                        type: new GraphQLNonNull(GraphQLInt)
                     }
                 },
-                resolve: function (root, params) {
-                    const mixtapes = MixtapeModel.find({
-                        $and: [{private: false},
-                            {ownerActive: true}]
-                    }).exec();
-                    if (!mixtapes) {
-                        throw new Error('Error')
+                resolve: async function (root, params) {
+                    // Get the current time
+                    const dayAgo = new Date(Date.now() - 1000*60*60*24);
+                    const weekAgo = new Date(Date.now() - 1000*60*60*24*7);
+
+                    let mixtapes = [];
+
+                    let cursor = MixtapeModel.find({$and: [{private: false}, {ownerActive: true}]}).cursor();
+
+                    let mixtape;
+                    while ((mixtape = await cursor.next())) {
+                        // Start at the end
+                        let index = mixtape.likesOverTime.length - 1;
+                        let likesToday = 0;
+                        let likesThisWeek = 0;
+                        let listensToday = 0;
+                        let listensThisWeek = 0;
+
+                        // While the time is before a week ago
+                        while(index >= 0 && mixtape.likesOverTime[index].time > weekAgo){
+                            // While the time is before a day ago
+                            if(mixtape.likesOverTime[index].time > dayAgo){
+                                likesToday += 1;
+                            }
+
+                            likesThisWeek += 1;
+
+                            // Step back
+                            index -= 1;
+                        }
+
+                        index = mixtape.listensOverTime.length - 1;
+
+                        // While the time is before a week ago
+                        while(index >= 0 && mixtape.listensOverTime[index].time > weekAgo){
+                            // While the time is before a day ago
+                            if(mixtape.listensOverTime[index].time > dayAgo){
+                                listensToday += 1;
+                            }
+
+                            listensThisWeek += 1;
+
+                            // Step back
+                            index -= 1;
+                        }
+
+                        mixtape.likesToday = likesToday;
+                        mixtape.likesThisWeek = likesThisWeek;
+                        mixtape.listensToday = listensToday;
+                        mixtape.listensThisWeek = listensThisWeek;
+
+                        mixtapes.push(mixtape);
                     }
-                    return mixtapes
+
+                    // Sort, paginate, then return
+                    if(params.criteria === "day"){
+                        return mixtapes.sort((b, a) => (a.listensToday + 5*a.likesToday) - (b.listensToday + 5*b.likesToday)).slice(params.skip, params.skip + params.limit);
+                    } else if(params.criteria === "week"){
+                        return mixtapes.sort((b, a) => (a.listensThisWeek + 5*a.likesThisWeek) - (b.listensThisWeek + 5*b.likesThisWeek)).slice(params.skip, params.skip + params.limit);
+                    } else {
+                        return mixtapes.sort((b, a) => (a.listens + 5*a.likes) - (b.listens + 5*b.likes)).slice(params.skip, params.skip + params.limit);
+                    }
                 }
             },
+
+            // Get the mixtapes that a user owns or is shared into
             getUserMixtapes: {
                 type: new GraphQLList(mixtapeType),
                 args: {
@@ -280,6 +355,8 @@ var queryType = new GraphQLObjectType({
                     return mixtapes
                 }
             },
+
+            // Get all user mixtapes regardless of active status
             getAllUserMixtapes: {
                 type: new GraphQLList(mixtapeType),
                 args: {
@@ -297,6 +374,8 @@ var queryType = new GraphQLObjectType({
                     return mixtapes
                 }
             },
+
+            // Get the list of mixtapes to display on a user's page
             getUserPageMixtapes: {
                 type: new GraphQLList(mixtapeType),
                 args: {
@@ -329,6 +408,8 @@ var queryType = new GraphQLObjectType({
                     return mixtapes
                 }
             },
+
+            // Does a search for mixtapes
             queryMixtapes: {
                 type: new GraphQLList(mixtapeType),
                 args: {
@@ -337,11 +418,18 @@ var queryType = new GraphQLObjectType({
                     },
                     userId: {
                         type: new GraphQLNonNull(GraphQLString)
+                    },
+                    skip: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    limit: {
+                        type: new GraphQLNonNull(GraphQLInt)
                     }
                 },
                 resolve: function(root, params) {
                     return MixtapeModel.find({title: {$regex: params.searchTerm, $options: "i"},
-                        $and: [{$or:[{ownerId: params.userId},{"collaborators.userId": params.userId},{private: false}]}, {ownerActive: true}]}).exec();
+                        $and: [{$or:[{ownerId: params.userId},{"collaborators.userId": params.userId},{private: false}]}, {ownerActive: true}]})
+                        .skip(params.skip).limit(params.limit).exec();
                 }
             },
         }
@@ -352,6 +440,7 @@ var mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: function () {
         return {
+            // Createes a new mixtape
             createNewMixtape: {
                 type: mixtapeType,
                 args: {
@@ -374,8 +463,8 @@ var mutation = new GraphQLObjectType({
                     params.comments = [];
                     params.private = true;
                     params.collaborators = [];
-                    params.likesPerDay = [];
-                    params.listensPerDay = [];
+                    params.likesOverTime = [];
+                    params.listensOverTime = [];
                     params.ownerActive = true;
 
                     const mixtapeModel = new MixtapeModel(params);
@@ -386,6 +475,8 @@ var mutation = new GraphQLObjectType({
                     return newMixtape
                 }
             },
+
+            // Creates a new mixape based on an existing one
             createMixtapeFromBase: {
                 type: mixtapeType,
                 args: {
@@ -418,8 +509,8 @@ var mutation = new GraphQLObjectType({
                     params.comments = [];
                     params.private = true;
                     params.collaborators = [];
-                    params.likesPerDay = [];
-                    params.listensPerDay = [];
+                    params.likesOverTime = [];
+                    params.listensOverTime = [];
                     params.ownerActive = true;
 
                     const mixtapeModel = new MixtapeModel(params);
@@ -430,6 +521,8 @@ var mutation = new GraphQLObjectType({
                     return newMixtape
                 }
             },
+
+            // Takes in another mixtapes songs and genres, and mashes them into an existing mixtape
             mashMixtape: {
                 type: mixtapeType,
                 args: {
@@ -451,6 +544,8 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findByIdAndUpdate(params.id, {title: params.title, songs: params.songs, genres: params.genres}).exec();
                 }
             },
+
+            // Adds a mixtape - DEPRECATED
             addMixtape: {
                 type: mixtapeType,
                 args: {
@@ -512,6 +607,8 @@ var mutation = new GraphQLObjectType({
                     return newMixtape
                 }
             },
+
+            // Updates a mixtape - DEPRECATED
             updateMixtape: {
                 type: mixtapeType,
                 args: {
@@ -592,6 +689,8 @@ var mutation = new GraphQLObjectType({
                     });
                 }
             },
+
+            // Removes a mixtape by id
             removeMixtape: {
                 type: mixtapeType,
                 args: {
@@ -608,6 +707,8 @@ var mutation = new GraphQLObjectType({
                     return remMixtape;
                 }
             },
+
+            // Removes all mixtapes from the database
             removeMixtapes: {
                 type: GraphQLBoolean,
                 resolve: function () {
@@ -615,6 +716,8 @@ var mutation = new GraphQLObjectType({
                     return true;
                 }
             },
+
+             // Updates the title of the mixtape
             updateMixtapeTitle: {
                 type: mixtapeType,
                 args: {
@@ -635,6 +738,8 @@ var mutation = new GraphQLObjectType({
                     });
                 }
             },
+
+            // Updates the description of the mixtape
             updateMixtapeDescription: {
                 type: mixtapeType,
                 args: {
@@ -655,6 +760,8 @@ var mutation = new GraphQLObjectType({
                     });
                 }
             },
+
+            // Updates the genres of the mixtape
             updateMixtapeGenres: {
                 type: mixtapeType,
                 args: {
@@ -670,6 +777,8 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findByIdAndUpdate({_id: params.id}, {genres: params.genres}, {new: true}).exec();
                 }
             },
+
+            // Adds songs to the mixtape
             addSongs: {
                 type: mixtapeType,
                 args: {
@@ -685,6 +794,8 @@ var mutation = new GraphQLObjectType({
                    return MixtapeModel.findOneAndUpdate({_id: params.id}, { $push: {songs: {$each: params.songs}}}, {new: true}).exec();
                 }
             },
+
+            // Edits the song order of the mixtape/deletes songs from the mixtape
             editSongs: {
                 type: mixtapeType,
                 args: {
@@ -700,6 +811,8 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findOneAndUpdate({_id: params.id}, {$set: {songs: params.songs}}, {new: true}).exec();
                 }
             },
+
+            // Adds a comment to the mixtape
             addComment: {
                 type: mixtapeType,
                 args: {
@@ -722,6 +835,8 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findOneAndUpdate({_id: params.id}, {$push: {comments: params.comment}}, {new: true}).exec();
                 }
             },
+
+            // Adds a reply to a comment on the mixtape
             addReply: {
                 type: mixtapeType,
                 args: {
@@ -740,6 +855,8 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findOneAndUpdate({$and: [{_id: params.id}, {"comments.id": params.commentId}]}, {$push: {"comments.$.replies": params.reply}}, {new: true});
                 }
             },
+
+            // Updates the number of likes on a mixtape and the likes array
             updateLikes: {
                 type: mixtapeType,
                 args: {
@@ -747,14 +864,26 @@ var mutation = new GraphQLObjectType({
                         name: '_id',
                         type: new GraphQLNonNull(GraphQLString)
                     },
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
                     incAmount: {
                         type: new GraphQLNonNull(GraphQLInt)
                     }
                 },
                 resolve: function(root, params){
-                    return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {likes: params.incAmount}}, {new: true}).exec();
+                    if(params.incAmount > 0){
+                        // The user liked the mixtape, add their id to the list
+                        const likeObj = {userId: params.userId}
+                        return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {likes: params.incAmount}, $push: {likesOverTime: likeObj} }, {new: true}).exec();
+                    } else {
+                        // The user unliked the mixtape, remove their id from the list
+                        return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {likes: params.incAmount}, $pull: {likesOverTime: {userId: params.userId}}}, {new: true}).exec();
+                    }
                 }
             },
+
+            // Updates the number of dislikes in the mixtape
             updateDislikes: {
                 type: mixtapeType,
                 args: {
@@ -770,6 +899,25 @@ var mutation = new GraphQLObjectType({
                     return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {dislikes: params.incAmount}}, {new: true}).exec();
                 }
             },
+
+            addListen: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    userId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params){
+                    const listenObj = {userId: params.userId};
+
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$inc: {listens: 1}, $push: {listensOverTime: listenObj}}, {new: true}).exec();
+                }
+            },
+
             updatePrivate: {
                 type: mixtapeType,
                 args: {

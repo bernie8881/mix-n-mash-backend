@@ -35,8 +35,18 @@ const MixtapeSchema = new mongoose.Schema({
     privilegeLevel: String,
   }],
   timeCreated: { type: Date, default: Date.now },
-  likesPerDay: [Number],
-  listensPerDay: [Number],
+  likesOverTime: [
+    {
+      time: {type: Date, default: Date.now},
+      userId: String
+    }
+  ],
+  listensOverTime: [
+    {
+      time: {type: Date, default: Date.now},
+      userId: String
+    }
+  ],
   ownerActive: Boolean
 });
 
