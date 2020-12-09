@@ -431,14 +431,14 @@ var mutation = new GraphQLObjectType({
                         name: "_id",
                         type: GraphQLString
                     },
-                    receivedMashmateRequests: {
+                    newMashmateRequest: {
                         type: new GraphQLNonNull(mashmateRequestInputType)
                     }
                 },
                 resolve: function(root, params) {
                     let temp = UserModel.findByIdAndUpdate(params.id,
                     {
-                        $push: { receivedMashmateRequests: params.senderId }
+                        $push: { receivedMashmateRequests: params.newMashmateRequest }
                     }).exec();
                     return temp;
                 }
