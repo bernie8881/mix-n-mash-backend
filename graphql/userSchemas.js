@@ -429,6 +429,25 @@ var mutation = new GraphQLObjectType({
                 resolve: function(root, params) {
                     return UserModel.findByIdAndUpdate(params.id, {$set: {active: true}}, {new:true}).exec();
                 }
+            },
+            sendMashmateRequest: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    },
+                    newMashmateRequest: {
+                        type: new GraphQLNonNull(mashmateRequestInputType)
+                    }
+                },
+                resolve: function(root, params) {
+                    let temp = UserModel.findByIdAndUpdate(params.id,
+                    {
+                        $push: { receivedMashmateRequests: params.newMashmateRequest }
+                    }).exec();
+                    return temp;
+                }
             }
         }
     }
