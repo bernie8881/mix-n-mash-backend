@@ -496,8 +496,6 @@ var mutation = new GraphQLObjectType({
                 },
                 resolve: function(root, params){
                     return UserModel.findByIdAndUpdate(params.id, {$inc: {numFollowers: -1}}, {new: true}).exec();
-                    }, {new: true}).exec();
-                    return temp;
                 }
             },
             viewMashmateRequest: {
