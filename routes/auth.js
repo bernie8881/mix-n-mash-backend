@@ -150,7 +150,6 @@ router.post("/signup", async (req, res) => {
                 likedMixtapes: [],
                 dislikedMixtapes: [],
                 genrePreferences: [],
-                sentMashmateRequests: [],
                 receivedMashmateRequests: [],
                 active: true,
             }
