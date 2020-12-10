@@ -445,10 +445,73 @@ var mutation = new GraphQLObjectType({
                     let temp = UserModel.findByIdAndUpdate(params.id,
                     {
                         $push: { receivedMashmateRequests: params.newMashmateRequest }
-                    }).exec();
+                    }, {new:true}).exec();
                     return temp;
                 }
+            },
+            followUser: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    },
+                    idToFollow: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    let temp = UserModel.findByIdAndUpdate(params.id,
+                    {
+                        $push: { following: params.idToFollow }
+                    }, {new:true}).exec();
+                    return temp;
+                }
+            },
+            incNumFollowers: {
+                type: userType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve: function(root, params){
+                    return UserModel.findByIdAndUpdate(params.id, {$inc: {numFollowers: 1}}, {new: true}).exec();
+                }
+            },
+            unfollowUser: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: GraphQLString
+                    },
+                    idToUnfollow: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    let temp = UserModel.findByIdAndUpdate(params.id,
+                    {
+                        $pull: { following: params.idToUnfollow }
+                    }, {new:true}).exec();
+                    return temp;
+                }
+            },
+            decNumFollowers: {
+                type: userType,
+                args: {
+                    id: {
+                        name: '_id',
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve: function(root, params){
+                    return UserModel.findByIdAndUpdate(params.id, {$inc: {numFollowers: -1}}, {new: true}).exec();
+                }
             }
+
         }
     }
 });
