@@ -44,9 +44,6 @@ var mashmateRequestType = new GraphQLObjectType({
             senderId: {
                 type: GraphQLString
             },
-            recipientId: {
-                type: GraphQLString
-            },
             username: {
                 type: GraphQLString
             },
@@ -65,9 +62,6 @@ var mashmateRequestInputType = new GraphQLInputObjectType({
     fields: function(){
         return{
             senderId: {
-                type: GraphQLString
-            },
-            recipientId: {
                 type: GraphQLString
             },
             username: {
@@ -147,9 +141,6 @@ var userType = new GraphQLObjectType({
             },
             genrePreferences: {
                 type: new GraphQLList(genrePreferencesType)
-            },
-            sentMashmateRequests: {
-                type: new GraphQLList(mashmateRequestType)
             },
             receivedMashmateRequests: {
                 type: new GraphQLList(mashmateRequestType)
@@ -248,7 +239,6 @@ var mutation = new GraphQLObjectType({
                     params.mashmates = [];
                     params.mixtapes = [];
                     params.genrePreferences = [];
-                    params.sentMashmateRequests = [];
                     params.receivedMashmateRequests = []
                     params.active = true;
 
@@ -295,9 +285,6 @@ var mutation = new GraphQLObjectType({
                     },
                     genrePreferences: {
                         type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
-                    },
-                    sentMashmateRequests: {
-                        type: new GraphQLNonNull(new GraphQLList(mashmateRequestInputType))
                     },
                     receivedMashmateRequests: {
                         type: new GraphQLNonNull(new GraphQLList(mashmateRequestInputType))
@@ -435,7 +422,7 @@ var mutation = new GraphQLObjectType({
                 args: {
                     id: {
                         name: "_id",
-                        type: GraphQLString
+                        type: new GraphQLNonNull(GraphQLString)
                     },
                     newMashmateRequest: {
                         type: new GraphQLNonNull(mashmateRequestInputType)
@@ -509,6 +496,66 @@ var mutation = new GraphQLObjectType({
                 },
                 resolve: function(root, params){
                     return UserModel.findByIdAndUpdate(params.id, {$inc: {numFollowers: -1}}, {new: true}).exec();
+                    }, {new: true}).exec();
+                    return temp;
+                }
+            },
+            viewMashmateRequest: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    senderId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: function(root, params) {
+                    return UserModel.findOneAndUpdate({$and: [{_id: params.id}, {"receivedMashmateRequests.senderId": params.senderId}]}, {"receivedMashmateRequests.$.seen": true}, {new: true}).exec();
+                }
+            },
+            removeMashmateRequests: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                },
+                resolve: function(root, params) {
+                    return UserModel.findByIdAndUpdate(params.id, {receivedMashmateRequests: [], mashmates: []}, {new: true}).exec();
+                }
+            },
+            resolveMashmateRequest: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    senderId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    username: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    senderUsername: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    accepted: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
+                    }
+                },
+                resolve: async function(root, params) {
+                    if(params.accepted){
+                        const mashmateObj = {id: params.senderId, username: params.senderUsername};
+                        const otherMashmateObj = {id: params.id, username: params.username};
+                        await UserModel.findByIdAndUpdate(params.senderId, {$push: {mashmates: otherMashmateObj}}).exec();
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {receivedMashmateRequests: {senderId: params.senderId}}, $push: {mashmates: mashmateObj}}, {new: true}).exec();
+                    } else {
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {receivedMashmateRequests: {senderId: params.senderId}}}, {new: true}).exec();
+                    }
                 }
             }
 
