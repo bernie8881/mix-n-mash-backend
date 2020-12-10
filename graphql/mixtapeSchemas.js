@@ -947,6 +947,21 @@ var mutation = new GraphQLObjectType({
                 resolve: function(root, params){
                     return MixtapeModel.findByIdAndUpdate(params.id, {$set: {ownerActive: params.ownerActive}}, {new: true}).exec();
                 }
+            },
+            updateCollaborators: {
+                type: mixtapeType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    collaborators: {
+                        type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
+                    }
+                },
+                resolve: function(root, params){
+                    return MixtapeModel.findByIdAndUpdate(params.id, {$set: {collaborators: params.collaborators}}, {new: true}).exec();
+                }
             }
         }
     }
