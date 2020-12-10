@@ -17,19 +17,9 @@ const UserSchema = new mongoose.Schema({
     genrePreferences: [
         {genre: String, genreIncVal: Number}
     ],
-    sentMashmateRequests: [
-        {
-            senderId: String,
-            recipientId: String,
-            username: String,
-            timeSent: { type: Date, default: Date.now },
-            seen: Boolean
-        }
-    ],
     receivedMashmateRequests: [
         {
             senderId: String,
-            recipientId: String,
             username: String,
             timeSent: { type: Date, default: Date.now },
             seen: Boolean

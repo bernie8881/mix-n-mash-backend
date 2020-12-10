@@ -267,6 +267,9 @@ var queryType = new GraphQLObjectType({
                     },
                     limit: {
                         type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    following: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
                     }
                 },
                 resolve: async function (root, params) {
@@ -275,8 +278,13 @@ var queryType = new GraphQLObjectType({
                     const weekAgo = new Date(Date.now() - 1000*60*60*24*7);
 
                     let mixtapes = [];
+                    let cursor;
 
-                    let cursor = MixtapeModel.find({$and: [{private: false}, {ownerActive: true}]}).cursor();
+                    if(params.criteria === "dayFollowers" || params.criteria === "weekFollowers" || params.criteria === "allTimeFollowers"){
+                        cursor = MixtapeModel.find({$and: [{private: false}, {ownerActive: true}, {ownerId: {$in: params.following}}]}).cursor();
+                    } else {
+                        cursor = MixtapeModel.find({$and: [{private: false}, {ownerActive: true}]}).cursor();
+                    }
 
                     let mixtape;
                     while ((mixtape = await cursor.next())) {
@@ -324,9 +332,9 @@ var queryType = new GraphQLObjectType({
                     }
 
                     // Sort, paginate, then return
-                    if(params.criteria === "day"){
+                    if(params.criteria === "day" || params.criteria === "dayFollowers"){
                         return mixtapes.sort((b, a) => (a.listensToday + 5*a.likesToday) - (b.listensToday + 5*b.likesToday)).slice(params.skip, params.skip + params.limit);
-                    } else if(params.criteria === "week"){
+                    } else if(params.criteria === "week" || params.criteria === "weekFollowers"){
                         return mixtapes.sort((b, a) => (a.listensThisWeek + 5*a.likesThisWeek) - (b.listensThisWeek + 5*b.likesThisWeek)).slice(params.skip, params.skip + params.limit);
                     } else {
                         return mixtapes.sort((b, a) => (a.listens + 5*a.likes) - (b.listens + 5*b.likes)).slice(params.skip, params.skip + params.limit);
