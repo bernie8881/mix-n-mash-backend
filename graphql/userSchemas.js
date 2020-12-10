@@ -555,7 +555,31 @@ var mutation = new GraphQLObjectType({
                         return UserModel.findByIdAndUpdate(params.id, {$pull: {receivedMashmateRequests: {senderId: params.senderId}}}, {new: true}).exec();
                     }
                 }
-            }
+            },
+            removeMashmate: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    mashmateId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    username: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    mashmateUsername: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: async function(root, params) {
+                    const mashmateObj = {id: params.mashmateId, username: params.mashmateUsername};
+                    const otherMashmateObj = {id: params.id, username: params.username};
+                    await UserModel.findByIdAndUpdate(params.mashmateId, {$pull: {mashmates: otherMashmateObj}}).exec();
+                    return UserModel.findByIdAndUpdate(params.id, {$pull: {mashmates: mashmateObj}}, {new: true}).exec();
+                }
+            },
 
         }
     }
