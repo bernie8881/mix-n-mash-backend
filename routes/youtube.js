@@ -8,7 +8,7 @@ router.get('/', async function(req, res, next) {
     let pageToken = req.query.pageToken;
 
     let url = "https://youtube.googleapis.com/youtube/v3/search?q=" + term +
-    "&key=AIzaSyC_z5jw7UtqAva3gYDpiyFjNReBXDds3mE&part=snippet&maxResults=5";
+    "&key=AIzaSyC_z5jw7UtqAva3gYDpiyFjNReBXDds3mE&part=snippet&maxResults=5&type=video";
 
     if(pageToken){
         url += "&pageToken=" + pageToken
