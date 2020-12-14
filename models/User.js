@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema({
     likedMixtapes: [String],
     dislikedMixtapes: [String],
     genrePreferences: [
-        {genre: String, genreIncVal: Number}
+        {genre: String, val: Number}
     ],
     receivedMashmateRequests: [
         {

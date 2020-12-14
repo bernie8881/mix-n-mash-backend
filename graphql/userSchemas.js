@@ -5,7 +5,7 @@ const GraphQLNonNull = require('graphql').GraphQLNonNull;
 const GraphQLID = require('graphql').GraphQLID;
 const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
-const { isTypeSystemExtensionNode, GraphQLBoolean, GraphQLScalarType, GraphQLInputObjectType } = require('graphql');
+const { isTypeSystemExtensionNode, GraphQLBoolean, GraphQLScalarType, GraphQLInputObjectType, GraphQLFloat } = require('graphql');
 const GraphQLDate = require('graphql-date');
 const UserModel = require('../models/User');
 
@@ -16,8 +16,8 @@ var genrePreferencesType = new GraphQLObjectType({
             genre: {
                 type: GraphQLString
             },
-            genreIncVal: {
-                type: GraphQLInt
+            val: {
+                type: GraphQLFloat
             }
         }
     }
@@ -30,8 +30,8 @@ var genrePreferencesInputType = new GraphQLInputObjectType({
             genre: {
                 type: GraphQLString
             },
-            genreIncVal: {
-                type: GraphQLInt
+            val: {
+                type: GraphQLFloat
             }
         }
     }
@@ -335,15 +335,40 @@ var mutation = new GraphQLObjectType({
                     },
                     like: {
                         type: new GraphQLNonNull(GraphQLBoolean)
+                    },
+                    mixtapeGenres: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    genrePreferences: {
+                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
+                    },
+                    wasDisliked: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
                     }
                 },
                 resolve: function (root, params) {
                     if(params.like){
                         // Add to list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$push: {likedMixtapes: params.mixtapeId}, $pull: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        for (let i=0; i < params.genrePreferences.length; i++){
+                            let genre = params.genrePreferences[i].genre;
+                            if (params.mixtapeGenres.includes(genre)){
+                              params.genrePreferences[i].val += params.wasDisliked ? 0.1 : 0.05;
+                              params.genrePreferences[i].val = Math.min(params.genrePreferences[i].val, 1);
+                            }
+                            // params.genrePreferences[i] = {genre: tempGenrePreferences[i].genre, val: tempGenrePreferences[i].val};
+                        }
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {likedMixtapes: params.mixtapeId}, $pull: {dislikedMixtapes: params.mixtapeId}, genrePreferences: params.genrePreferences}, {new: true}).exec();
                     } else {
                         // Remove from list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$pull: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        for (let i=0; i < params.genrePreferences.length; i++){
+                            let genre = params.genrePreferences[i].genre;
+                            if (params.mixtapeGenres.includes(genre)){
+                              params.genrePreferences[i].val -= 0.05;
+                              params.genrePreferences[i].val = Math.max(params.genrePreferences[i].val, 0);
+                            }
+                            // params.genrePreferences[i] = {genre: tempGenrePreferences[i].genre, val: tempGenrePreferences[i].val};
+                        }
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {likedMixtapes: params.mixtapeId}, genrePreferences: params.genrePreferences}, {new: true}).exec();
                     }
                 }
             },
@@ -359,15 +384,40 @@ var mutation = new GraphQLObjectType({
                     },
                     dislike: {
                         type: new GraphQLNonNull(GraphQLBoolean)
+                    },
+                    mixtapeGenres: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    genrePreferences: {
+                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
+                    },
+                    wasLiked: {
+                        type: new GraphQLNonNull(GraphQLBoolean)
                     }
                 },
                 resolve: function (root, params) {
                     if(params.dislike){
                         // Add to list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$push: {dislikedMixtapes: params.mixtapeId}, $pull: {likedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        for (let i=0; i < params.genrePreferences.length; i++){
+                            let genre = params.genrePreferences[i].genre;
+                            if (params.mixtapeGenres.includes(genre)){
+                              params.genrePreferences[i].val -= params.wasLiked ? 0.1 : 0.05;
+                              params.genrePreferences[i].val = Math.max(params.genrePreferences[i].val, 0);
+                            }
+                            // params.genrePreferences[i] = {genre: tempGenrePreferences[i].genre, val: tempGenrePreferences[i].val};
+                        }
+                        return UserModel.findByIdAndUpdate(params.id, {$push: {dislikedMixtapes: params.mixtapeId}, $pull: {likedMixtapes: params.mixtapeId}, genrePreferences: params.genrePreferences}, {new: true}).exec();
                     } else {
                         // Remove from list of liked mixtapes
-                        return UserModel.findByIdAndUpdate(params.id, {$pull: {dislikedMixtapes: params.mixtapeId}}, {new: true}).exec();
+                        for (let i=0; i < params.genrePreferences.length; i++){
+                            let genre = params.genrePreferences[i].genre;
+                            if (params.mixtapeGenres.includes(genre)){
+                              params.genrePreferences[i].val += 0.05;
+                              params.genrePreferences[i].val = Math.min(params.genrePreferences[i].val, 1);
+                            }
+                            // params.genrePreferences[i] = {genre: tempGenrePreferences[i].genre, val: tempGenrePreferences[i].val};
+                        }
+                        return UserModel.findByIdAndUpdate(params.id, {$pull: {dislikedMixtapes: params.mixtapeId}, genrePreferences: params.genrePreferences}, {new: true}).exec();
                     }
                 }
             },
@@ -580,7 +630,21 @@ var mutation = new GraphQLObjectType({
                     return UserModel.findByIdAndUpdate(params.id, {$pull: {mashmates: mashmateObj}}, {new: true}).exec();
                 }
             },
-
+            updateGenrePreferences: {
+                type: userType,
+                args: {
+                    id: {
+                        name: "_id",
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genrePreferences: {
+                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
+                    }
+                },
+                resolve: function(root, params){
+                    return UserModel.findByIdAndUpdate(params.id, {genrePreferences: params.genrePreferences}, {new: true}).exec();
+                }
+            }
         }
     }
 });
