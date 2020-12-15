@@ -24,8 +24,16 @@ const authRouter = require("./routes/auth")
 const app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'jade');
+
+if(process.env.NODE_ENV === "production"){
+  app.use(expres.static("client/build"));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, "./client", "build", "index.html"));
+  });
+}
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -34,10 +42,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-
-// app.use('*', cors(
-//   origin: "http://localhost:3001",
-// ));
 
 app.use('/test', cors(), graphqlHTTP({
   schema: testSchema,

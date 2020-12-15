@@ -1,0 +1,28 @@
+{
+  "files": {
+    "main.css": "/static/css/main.daf21b01.chunk.css",
+    "main.js": "/static/js/main.9e78783a.chunk.js",
+    "main.js.map": "/static/js/main.9e78783a.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.b068a67c.js",
+    "runtime-main.js.map": "/static/js/runtime-main.b068a67c.js.map",
+    "static/css/2.2a86faee.chunk.css": "/static/css/2.2a86faee.chunk.css",
+    "static/js/2.b9d8cb24.chunk.js": "/static/js/2.b9d8cb24.chunk.js",
+    "static/js/2.b9d8cb24.chunk.js.map": "/static/js/2.b9d8cb24.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.bd4d0b7c0e25fe06867641219f48a915.js": "/precache-manifest.bd4d0b7c0e25fe06867641219f48a915.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/2.2a86faee.chunk.css.map": "/static/css/2.2a86faee.chunk.css.map",
+    "static/css/main.daf21b01.chunk.css.map": "/static/css/main.daf21b01.chunk.css.map",
+    "static/js/2.b9d8cb24.chunk.js.LICENSE.txt": "/static/js/2.b9d8cb24.chunk.js.LICENSE.txt",
+    "static/media/global.css": "/static/media/GOTHICB.bc420c1c.TTF",
+    "static/media/headphones w rainbow w text.svg": "/static/media/headphones w rainbow w text.62ba77c3.svg",
+    "static/media/navbar-logo.svg": "/static/media/navbar-logo.b91dbd63.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.b068a67c.js",
+    "static/css/2.2a86faee.chunk.css",
+    "static/js/2.b9d8cb24.chunk.js",
+    "static/css/main.daf21b01.chunk.css",
+    "static/js/main.9e78783a.chunk.js"
+  ]
+}
