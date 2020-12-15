@@ -53,8 +53,6 @@ router.post("/verifyCode",(req, res, next) => {
             }
         }
 
-        console.log(result.email, req.body.email);
-
         // We found a result and it is the correct email
         if (result && result.email === req.body.email){
             // Check if the request is still valid
@@ -90,8 +88,6 @@ router.post("/login", (req, res, next) => {
         }
 
         if(!user){
-            console.log(err);
-            console.log(info);
             res.status(404).send("No user");
         } else {
             // User exists and is valid

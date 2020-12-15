@@ -259,41 +259,21 @@ var mutation = new GraphQLObjectType({
                     email: {
                         type: new GraphQLNonNull(GraphQLString)
                     },
-                    hashedPassword: {
-                        type: new GraphQLNonNull(GraphQLString)
-                    },
                     bio: {
                         type: new GraphQLNonNull(GraphQLString)
                     },
-                    numFollowers: {
-                        type: new GraphQLNonNull(GraphQLInt)
-                    },
-                    following: {
-                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
-                    },
-                    mashmates: {
-                        type: new GraphQLNonNull(new GraphQLList(mashmateInputType))
-                    },
-                    mixtapes: {
-                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
-                    },
-                    likedMixtapes: {
-                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
-                    },
-                    dislikedMixtapes: {
-                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
-                    },
-                    genrePreferences: {
-                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesInputType))
-                    },
-                    receivedMashmateRequests: {
-                        type: new GraphQLNonNull(new GraphQLList(mashmateRequestInputType))
-                    },
-                    active: {
-                        type: new GraphQLNonNull(GraphQLBoolean)
-                    }
                 },
                 resolve: function (root, params) {
+                    params.hashedPassword = "lmao_security";
+                    params.numFollowers = Math.floor(Math.random()*100);
+                    params.following = [];
+                    params.likedMixtapes = [];
+                    params.dislikeMixtapes = [];
+                    params.genrePreferences = [];
+                    params.receivedMashmateRequests = [];
+                    mashmates = [];
+                    params.active = true;
+
                     const userModel = new UserModel(params);
                     const newUser = userModel.save();
                     if (!newUser) {

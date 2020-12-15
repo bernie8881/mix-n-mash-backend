@@ -13,10 +13,6 @@ const session = require("express-session");
 const cors = require("cors");
 const passport = require("passport");
 
-// mongoose.connect('mongodb://localhost/node-graphql', { promiseLibrary: require('bluebird'), useNewUrlParser: true })
-//   .then(() =>  console.log('connection successful'))
-//   .catch((err) => console.error(err));
-
 mongoose.connect('mongodb+srv://joe-weaver:iamadmin4uall@mixnmash.c25ol.mongodb.net/mixnmashdev?retryWrites=true&w=majority', { promiseLibrary: require('bluebird'), useNewUrlParser: true })
   .then(() =>  console.log('connection successful'))
   .catch((err) => console.error(err));

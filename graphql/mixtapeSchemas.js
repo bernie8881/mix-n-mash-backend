@@ -307,8 +307,6 @@ var queryType = new GraphQLObjectType({
 
                     let sortedPrefs = params.genrePreferences.sort((b,a)=>(a.val - b.val));
 
-                    console.log(sortedPrefs);
-
                     while ((mixtape = await cursor.next())) {
                         // Start at the end
                         let index = mixtape.likesOverTime.length - 1;
@@ -470,6 +468,58 @@ var mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: function () {
         return {
+            // Creates a new mixape based on an existing one
+            createMixtapeAdmin: {
+                type: mixtapeType,
+                args: {
+                    ownerId: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    ownerName: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    title: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    description: {
+                        type: new GraphQLNonNull(GraphQLString)
+                    },
+                    genres: {
+                        type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    songs: {
+                        type: new GraphQLNonNull(new GraphQLList(songInputType))
+                    },
+                    listens: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    likes: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    dislikes: {
+                        type: new GraphQLNonNull(GraphQLInt)
+                    },
+                    collaborators: {
+                        type: new GraphQLNonNull(new GraphQLList(collaboratorsInputType))
+                    }
+                },
+                resolve: function(root, params){
+                    params.comments = [];
+                    params.private = false;
+                    params.likesOverTime = [];
+                    params.listensOverTime = [];
+                    params.ownerActive = true;
+                    params.image = [];
+
+                    const mixtapeModel = new MixtapeModel(params);
+                    const newMixtape = mixtapeModel.save();
+                    if (!newMixtape) {
+                        throw new Error('Error');
+                    }
+                    return newMixtape
+                }
+            },
+
             // Createes a new mixtape
             createNewMixtape: {
                 type: mixtapeType,
