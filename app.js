@@ -24,8 +24,8 @@ const authRouter = require("./routes/auth")
 const app = express();
 
 // view engine setup
-// app.set('views', path.join(__dirname, 'views'));
-// app.set('view engine', 'jade');
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
 if(process.env.NODE_ENV === "production"){
   app.use(expres.static("client/build"));
@@ -104,5 +104,8 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+var port = process.env.PORT || '3000';
+app.listen(port);
 
 module.exports = app;
