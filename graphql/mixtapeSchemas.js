@@ -6,7 +6,21 @@ const GraphQLString = require('graphql').GraphQLString;
 const GraphQLInt = require('graphql').GraphQLInt;
 const GraphQLDate = require('graphql-date');
 const MixtapeModel = require('../models/Mixtape');
-const { GraphQLBoolean, GraphQLInputObjectType, GraphQLScalarType } = require('graphql');
+const { GraphQLBoolean, GraphQLInputObjectType, GraphQLScalarType, GraphQLFloat } = require('graphql');
+
+const genrePreferencesType = new GraphQLInputObjectType({
+    name: "genrePreferences",
+    fields: function(){
+        return{
+            genre: {
+                type: GraphQLString
+            },
+            val: {
+                type: GraphQLFloat
+            }
+        }
+    }
+})
 
 const songType = new GraphQLObjectType({
     name: 'song',
@@ -270,6 +284,9 @@ var queryType = new GraphQLObjectType({
                     },
                     following: {
                         type: new GraphQLNonNull(new GraphQLList(GraphQLString))
+                    },
+                    genrePreferences: {
+                        type: new GraphQLNonNull(new GraphQLList(genrePreferencesType))
                     }
                 },
                 resolve: async function (root, params) {
@@ -287,6 +304,11 @@ var queryType = new GraphQLObjectType({
                     }
 
                     let mixtape;
+
+                    let sortedPrefs = params.genrePreferences.sort((b,a)=>(a.val - b.val));
+
+                    console.log(sortedPrefs);
+
                     while ((mixtape = await cursor.next())) {
                         // Start at the end
                         let index = mixtape.likesOverTime.length - 1;
@@ -333,11 +355,11 @@ var queryType = new GraphQLObjectType({
 
                     // Sort, paginate, then return
                     if(params.criteria === "day" || params.criteria === "dayFollowers"){
-                        return mixtapes.sort((b, a) => (a.listensToday + 5*a.likesToday) - (b.listensToday + 5*b.likesToday)).slice(params.skip, params.skip + params.limit);
+                        return mixtapes.sort((b, a) => (a.listensToday + 5*a.likesToday + (a.genres.includes(sortedPrefs[0].genre) ? a.listensToday/2 : 0) + (a.genres.includes(sortedPrefs[1].genre) ? a.listensToday/4 : 0) + (a.genres.includes(sortedPrefs[2].genre) ? a.listensToday/8 : 0)) - (b.listensToday + 5*b.likesToday + (b.genres.includes(sortedPrefs[0].genre) ? b.listensToday/2 : 0) + (b.genres.includes(sortedPrefs[1].genre) ? b.listensToday/4 : 0) + (b.genres.includes(sortedPrefs[2].genre) ? b.listensToday/8 : 0))).slice(params.skip, params.skip + params.limit);
                     } else if(params.criteria === "week" || params.criteria === "weekFollowers"){
-                        return mixtapes.sort((b, a) => (a.listensThisWeek + 5*a.likesThisWeek) - (b.listensThisWeek + 5*b.likesThisWeek)).slice(params.skip, params.skip + params.limit);
+                        return mixtapes.sort((b, a) => (a.listensThisWeek + 5*a.likesThisWeek + (a.genres.includes(sortedPrefs[0].genre) ? a.listensThisWeek/2 : 0) + (a.genres.includes(sortedPrefs[1].genre) ? a.listensThisWeek/4 : 0) + (a.genres.includes(sortedPrefs[2].genre) ? a.listensThisWeek/8 : 0)) - (b.listensThisWeek + 5*b.likesThisWeek + (b.genres.includes(sortedPrefs[0].genre) ? b.listensThisWeek/2 : 0) + (b.genres.includes(sortedPrefs[1].genre) ? b.listensThisWeek/4 : 0) + (b.genres.includes(sortedPrefs[2].genre) ? b.listensThisWeek/8 : 0))).slice(params.skip, params.skip + params.limit);
                     } else {
-                        return mixtapes.sort((b, a) => (a.listens + 5*a.likes) - (b.listens + 5*b.likes)).slice(params.skip, params.skip + params.limit);
+                        return mixtapes.sort((b, a) => (a.listens + 5*a.likes + (a.genres.includes(sortedPrefs[0].genre) ? a.listens/2 : 0) + (a.genres.includes(sortedPrefs[1].genre) ? a.listens/4 : 0) + (a.genres.includes(sortedPrefs[2].genre) ? a.listens/8 : 0)) - (b.listens + 5*b.likes + (b.genres.includes(sortedPrefs[0].genre) ? b.listens/2 : 0) + (b.genres.includes(sortedPrefs[1].genre) ? b.listens/4 : 0) + (b.genres.includes(sortedPrefs[2].genre) ? b.listens/8 : 0))).slice(params.skip, params.skip + params.limit);
                     }
                 }
             },
