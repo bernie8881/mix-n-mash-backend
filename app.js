@@ -71,7 +71,7 @@ app.use("/auth", bodyParser.json());
 app.use("/auth", bodyParser.urlencoded({extended: true}));
 
 app.use("/auth", cors({
-  origin: "http://localhost:3001",
+  origin: "https://laughing-leavitt-4e2e62.netlify.app/",
   credentials: true
 }))
 
