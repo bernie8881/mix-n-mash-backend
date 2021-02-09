@@ -9,6 +9,8 @@ JavaScript, CSS, Apollo Client, React, React Bootstrap, Material Icons
 BACKEND:
 Express, Node, GraphQL, MongoDB, YoutubeAPI, Passport (Auth, with Bcrypt  but mostly Passport), Sendgrid, React Router
 
-Link to front-end: https://github.com/joe-weaver/mix-n-mash \n
-Link to back-end: https://github.com/joe-weaver/mix-n-mash-backend/ \n 
+Link to front-end: https://github.com/joe-weaver/mix-n-mash
+
+Link to back-end: https://github.com/joe-weaver/mix-n-mash-backend/
+
 Link to the final product: https://www.mix-n-mash.com/
